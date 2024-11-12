@@ -1,0 +1,92 @@
+{
+  "groups": [
+    {
+      "name": "super-controller",
+      "type": "io.github.robertomike.super_controller.config.ConfigProperties",
+      "sourceType": "io.github.robertomike.super_controller.config.ConfigProperties"
+    },
+    {
+      "name": "super-controller.class-suffix",
+      "type": "io.github.robertomike.super_controller.config.ConfigProperties$ClassSuffix",
+      "sourceType": "io.github.robertomike.super_controller.config.ConfigProperties"
+    },
+    {
+      "name": "super-controller.path",
+      "type": "io.github.robertomike.super_controller.config.ConfigProperties$Path",
+      "sourceType": "io.github.robertomike.super_controller.config.ConfigProperties"
+    },
+    {
+      "name": "super-controller.controller-advice",
+      "type": "io.github.robertomike.super_controller.config.ConfigProperties$ControllerAdvice",
+      "sourceType": "io.github.robertomike.super_controller.config.ConfigProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "super-controller.prefix-url",
+      "type": "java.lang.String",
+      "description": "The base URL prefix for the super controller.",
+      "defaultValue": "/api/"
+    },
+    {
+      "name": "super-controller.base-package",
+      "type": "java.lang.String",
+      "description": "The base package prefix for search classes.",
+      "defaultValue": ""
+    },
+    {
+      "name": "super-controller.class-suffix.policy",
+      "type": "java.lang.String",
+      "description": "Class suffix for policy classes.",
+      "defaultValue": "Policy"
+    },
+    {
+      "name": "super-controller.class-suffix.request",
+      "type": "java.lang.String",
+      "description": "Class suffix for request classes.",
+      "defaultValue": "Request"
+    },
+    {
+      "name": "super-controller.class-suffix.response",
+      "type": "java.lang.String",
+      "description": "Class suffix for response classes.",
+      "defaultValue": "Response"
+    },
+    {
+      "name": "super-controller.class-suffix.service",
+      "type": "java.lang.String",
+      "description": "Class suffix for service classes.",
+      "defaultValue": "Service"
+    },
+    {
+      "name": "super-controller.path.policies",
+      "type": "java.lang.String",
+      "description": "Path for policy classes.",
+      "defaultValue": "policies"
+    },
+    {
+      "name": "super-controller.path.requests",
+      "type": "java.lang.String",
+      "description": "Path for request classes.",
+      "defaultValue": "requests"
+    },
+    {
+      "name": "super-controller.path.responses",
+      "type": "java.lang.String",
+      "description": "Path for response classes.",
+      "defaultValue": "responses"
+    },
+    {
+      "name": "super-controller.path.services",
+      "type": "java.lang.String",
+      "description": "Path for service classes.",
+      "defaultValue": "services"
+    },
+    {
+      "name": "super-controller.controller-advice.enable",
+      "type": "java.lang.Boolean",
+      "description": "Enable or disable the controller advice.",
+      "defaultValue": true
+    }
+  ]
+}
