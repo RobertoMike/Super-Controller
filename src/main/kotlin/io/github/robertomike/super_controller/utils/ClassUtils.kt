@@ -7,10 +7,29 @@ import org.reflections.scanners.Scanners.SubTypes
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 
+/**
+ * Utility class for working with classes.
+ *
+ * Provides methods for finding classes by name and package.
+ */
 interface ClassUtils {
+    /**
+     * Returns the generics of the current class.
+     *
+     * @return An array of [Type] representing the generics of the current class.
+     */
     val generics: Array<Type>
         get() = (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments
 
+    /**
+     * Finds a class by name and package.
+     *
+     * @param basePackage The base package to search in.
+     * @param directory The directory to search in.
+     * @param fileName The name of the class to find.
+     * @param clazz The class type to find.
+     * @return The found class, or throws a [SuperControllerException] if not found.
+     */
     @Suppress("UNCHECKED_CAST")
     fun <O> findClass(basePackage: String, directory: String, fileName: String, clazz: Class<O>): Class<O> {
         val packagePath = "${basePackage}.$directory"

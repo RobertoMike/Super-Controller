@@ -13,7 +13,9 @@ val pomGroupId = group
 val pomVersion = version
 val artifactId = "super-controller"
 val jdkCompileVersion = 17
-val springBootVersion = "3.0.5"
+val springBootVersion = "3.0.0"
+val baradumApacheVersion = "2.0.2"
+val springRules = "2.0.1"
 
 repositories {
     mavenCentral()
@@ -26,8 +28,8 @@ dependencies {
     implementation("org.modelmapper:modelmapper:3.1.1")
     implementation("org.springframework.boot:spring-boot-starter-validation:$springBootVersion")
     implementation("jakarta.validation:jakarta.validation-api:3.0.2")
-    implementation("io.github.robertomike:baradum-apache-tomcat:2.0.0")
-    implementation("io.github.robertomike:hefesto-hibernate:2.0.0")
+    implementation("io.github.robertomike:baradum-apache-tomcat:$baradumApacheVersion")
+    implementation("io.github.robertomike:spring-rules:$springRules")
     implementation("org.atteo:evo-inflector:1.3")
     implementation("org.reflections:reflections:0.10.2")
 
@@ -35,8 +37,8 @@ dependencies {
     api("org.reflections:reflections:0.10.2")
     api("org.modelmapper:modelmapper:3.1.1")
     api("org.springframework.boot:spring-boot-starter-validation:$springBootVersion")
-    api("io.github.robertomike:baradum-apache-tomcat:2.0.0")
-    api("io.github.robertomike:hefesto-hibernate:2.0.0")
+    api("io.github.robertomike:baradum-apache-tomcat:$baradumApacheVersion")
+    implementation("io.github.robertomike:spring-rules:$springRules")
 
     runtimeOnly("org.jetbrains.kotlin:kotlin-reflect:1.2.41")
 
