@@ -23,7 +23,7 @@ class ConfigPropertiesTest {
         val configProperties = ConfigProperties()
 
         var violations = validator.validate(configProperties)
-        assertEquals(11, violations.size)
+        assertEquals(15, violations.size)
 
         configProperties.basePackage = "io"
         configProperties.prefixUrl = "/api"
@@ -32,7 +32,7 @@ class ConfigPropertiesTest {
         configProperties.path.services = "dto_requests"
         configProperties.path.responses = "Responses"
         configProperties.classSuffix.policy = "Policy"
-        configProperties.classSuffix.request = "Request_Random_suffix"
+        configProperties.classSuffix.request = "RequestRandomSuffix"
         configProperties.classSuffix.service = "Service"
         configProperties.classSuffix.response = "Response"
 

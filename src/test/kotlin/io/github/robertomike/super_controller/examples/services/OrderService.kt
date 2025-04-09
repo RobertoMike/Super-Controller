@@ -11,13 +11,14 @@ import io.github.robertomike.super_controller.examples.requests.orders.StoreOrde
 import io.github.robertomike.super_controller.exceptions.NotFoundException
 import io.github.robertomike.super_controller.requests.Request
 import io.github.robertomike.super_controller.services.SuperService
+import io.github.robertomike.super_controller.services.SuperServiceWithFilters
 import org.springframework.stereotype.Service
 
 @Service
 class OrderService(
     override val repository: OrderRepository,
     private val userRepository: UserRepository
-) : SuperService<Order, Long>() {
+) : SuperServiceWithFilters<Order, Long>() {
 
 
     override fun filters(): List<Filter<*>> {

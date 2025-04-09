@@ -1,7 +1,6 @@
 package io.github.robertomike.super_controller.config
 
 import io.github.robertomike.jakidate.validations.strings.cases.PascalCase
-import io.github.robertomike.super_controller.validations.ClassSuffixConstraint
 import io.github.robertomike.super_controller.validations.PathConstraint
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank

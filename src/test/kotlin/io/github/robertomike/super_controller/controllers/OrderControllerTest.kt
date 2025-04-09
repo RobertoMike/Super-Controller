@@ -1,16 +1,18 @@
 package io.github.robertomike.super_controller.controllers
 
 import com.fasterxml.jackson.core.type.TypeReference
+import io.github.robertomike.springrules.responses.Violations
 import io.github.robertomike.super_controller.BasicTest
 import io.github.robertomike.super_controller.examples.models.Order
 import io.github.robertomike.super_controller.examples.repositories.OrderRepository
 import io.github.robertomike.super_controller.responses.errors.BasicErrorResponse
-import io.github.robertomike.super_controller.responses.errors.ValidationErrorResponse
 import io.github.robertomike.super_controller.utils.Page
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -68,20 +70,22 @@ class OrderControllerTest : BasicTest() {
     @Throws(Exception::class)
     fun storeNotValid() {
         val request: MockHttpServletRequestBuilder = MockMvcRequestBuilders.post(url)
-        basicCall(
-            request,
+
+        request.contentType(MediaType.APPLICATION_JSON)
+        request.content(
             """{
                 "name": "admin",
                 "userId": 4,
                 "price": null
-            }""".trimIndent(),
-            object : TypeReference<ValidationErrorResponse>() {},
-            { validation ->
-                assertFalse(validation.violations.isEmpty())
-                assertEquals("price", validation.violations[0].fieldName)
-            },
-            MockMvcResultMatchers.status().isUnprocessableEntity()
+            }""".trimIndent()
         )
+
+        mockMvc.perform(request)
+            .andDo(MockMvcResultHandlers.print())
+            .andExpect(MockMvcResultMatchers.status().isBadRequest)
+            .andExpect {
+                assertEquals(it.response.contentAsString, "{\"violations\":[{\"field\":\"price\",\"messages\":[\"must not be null\"],\"subfields\":null}]}")
+            }
     }
 
     @Test
