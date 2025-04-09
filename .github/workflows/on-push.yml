@@ -13,6 +13,12 @@ jobs:
       packages: write
 
     steps:
+      - uses: mirromutth/mysql-action@v1.1
+        with:
+          mysql version: '8.0' # Optional, default value is "latest". The version of the MySQL
+          mysql database: 'test' # Optional, default value is "test". The specified database which will be create
+          mysql root password: 1234 # Required if "mysql user" is empty, default is empty. The root superuser password
+
       - uses: actions/checkout@v3
 
       - name: Set up JDK 17
