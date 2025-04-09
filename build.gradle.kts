@@ -22,12 +22,10 @@ repositories {
 }
 
 dependencies {
-
     implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion")
     implementation("org.modelmapper:modelmapper:3.1.1")
     implementation("org.springframework.boot:spring-boot-starter-validation:$springBootVersion")
-    implementation("jakarta.validation:jakarta.validation-api:3.0.2")
     implementation("io.github.robertomike:baradum-apache-tomcat:$baradumApacheVersion")
     implementation("io.github.robertomike:spring-rules:$springRules")
     implementation("org.atteo:evo-inflector:1.3")
@@ -37,8 +35,7 @@ dependencies {
     api("org.reflections:reflections:0.10.2")
     api("org.modelmapper:modelmapper:3.1.1")
     api("org.springframework.boot:spring-boot-starter-validation:$springBootVersion")
-    api("io.github.robertomike:baradum-apache-tomcat:$baradumApacheVersion")
-    implementation("io.github.robertomike:spring-rules:$springRules")
+    api("io.github.robertomike:spring-rules:$springRules")
 
     runtimeOnly("org.jetbrains.kotlin:kotlin-reflect:1.2.41")
 
