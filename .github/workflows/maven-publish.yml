@@ -51,7 +51,7 @@ jobs:
       - name: Build and publish to Apache Maven Central Spring rules
         # Commands to build only spring rules
         run: |
-          gradle build
+          gradle build -x test
           export GPG_TTY=$(tty) && gradle -Psigning.keyId=${{ secrets.GPG_SHORT_KEY }} -Psigning.secretKeyRingFile=/home/runner/.gnupg/secring.gpg -Psigning.password=${GPG_KEY_PASSPHRASE} :publishLibraryPublicationToOSSRHRepository -x test
         env:
           GPG_KEY_PASSPHRASE: ${{ secrets.GPG_SECRET_KEY_PASSWORD }}
