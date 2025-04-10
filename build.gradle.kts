@@ -11,7 +11,7 @@ version = "1.0.0"
 
 val pomGroupId = group
 val pomVersion = version
-val artifactId = "super-controller"
+val baseArtifactId = "super-controller"
 val jdkCompileVersion = 17
 val springBootVersion = "3.0.0"
 val baradumApacheVersion = "2.0.2"
@@ -59,7 +59,7 @@ publishing {
             from(components["java"])
 
             groupId = "$pomGroupId"
-            artifactId = artifactId
+            artifactId = baseArtifactId
             version = "$pomVersion"
 
             pom {
