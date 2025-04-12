@@ -37,9 +37,9 @@ import java.util.*
  */
 abstract class SuperController<M, ID : Any>() : ControllerUtils() {
     @JvmOverloads constructor(
+        service: BasicService<M, ID>,
         needAuthorization: Boolean = true,
         policy: Policy<ID>? = null,
-        service: BasicService<M, ID>? = null,
         basePackage: String? = null
     ) : this() {
         this.needAuthorization = needAuthorization

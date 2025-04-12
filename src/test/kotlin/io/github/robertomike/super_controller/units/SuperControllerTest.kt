@@ -36,11 +36,12 @@ class SuperControllerTest : BasicTest() {
     fun emptyUrls_errors() {
         assertThrows<ServerException> {
             val temporal = object : SuperController<Order, Any>() {
-                override fun onlyUrls(): List<Methods> {
-                    return listOf()
+                override fun setConfig() {
+                    onlyUrls = mutableListOf()
                 }
             }
 
+            temporal.setConfig()
             temporal.urls
         }
     }
@@ -49,15 +50,13 @@ class SuperControllerTest : BasicTest() {
     fun emptyAfterExceptUrls_errors() {
         assertThrows<ServerException> {
             val temporal = object : SuperController<Order, Any>() {
-                override fun onlyUrls(): List<Methods> {
-                    return listOf(INDEX)
-                }
-
-                override fun exceptUrls(): List<Methods> {
-                    return listOf(INDEX)
+                override fun setConfig() {
+                    onlyUrls = mutableListOf(INDEX)
+                    exceptUrls = mutableListOf(INDEX)
                 }
             }
 
+            temporal.setConfig()
             temporal.urls
         }
     }

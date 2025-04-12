@@ -226,7 +226,7 @@ abstract class SuperService<M, ID> : ClassUtils, BasicService<M, ID> {
 
         val model = searchModelById(id)
 
-        delete(model)
+        deleteModel(model)
 
         afterDelete(model)
     }
@@ -259,7 +259,7 @@ abstract class SuperService<M, ID> : ClassUtils, BasicService<M, ID> {
      *
      * @param model The model to delete.
      */
-    protected open fun delete(model: M) {
+    protected open fun deleteModel(model: M) {
         if (useCustomDelete) {
             customDelete(model)
             return
