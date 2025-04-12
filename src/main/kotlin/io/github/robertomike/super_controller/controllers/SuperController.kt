@@ -1,7 +1,6 @@
 package io.github.robertomike.super_controller.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.github.robertomike.hefesto.models.BaseModel
 import io.github.robertomike.super_controller.config.ConfigProperties
 import io.github.robertomike.super_controller.enums.Methods
 import io.github.robertomike.super_controller.enums.Methods.*
@@ -36,7 +35,19 @@ import java.util.*
  * @param M The type of the model being controlled.
  * @param ID The type of the ID used to identify the model.
  */
-abstract class SuperController<M : BaseModel, ID : Any> : ControllerUtils() {
+abstract class SuperController<M, ID : Any>() : ControllerUtils() {
+    @JvmOverloads constructor(
+        needAuthorization: Boolean = true,
+        policy: Policy<ID>? = null,
+        service: BasicService<M, ID>? = null,
+        basePackage: String? = null
+    ) : this() {
+        this.needAuthorization = needAuthorization
+        this.policy = policy
+        this.service = service
+        this.basePackage = basePackage
+    }
+
     /**
      * The builder configuration for the request mapping handler.
      */
@@ -58,7 +69,7 @@ abstract class SuperController<M : BaseModel, ID : Any> : ControllerUtils() {
      * The object mapper used for JSON serialization and deserialization.
      */
     @Autowired
-    override lateinit var mapper: ObjectMapper
+    override lateinit var objectMapper: ObjectMapper
 
     /**
      * The validator used for validating requests.
@@ -86,32 +97,24 @@ abstract class SuperController<M : BaseModel, ID : Any> : ControllerUtils() {
     /**
      * The policy used for authorization.
      */
-    open var policy: Policy<ID>? = null
+    var policy: Policy<ID>? = null
         get() {
-            if (field != null) {
-                return field
-            }
-
-            try {
+            if (field == null) {
                 field = applicationContext.getBean(
                     findClass(
                         nameModel + properties.classSuffix.policy,
                         Policy::class.java
                     ) as Class<Policy<ID>>
                 )
-
-                return field
-            } catch (e: Exception) {
-                throw SuperControllerException(
-                    "Policy for $nameModel not found, created or disable authorization", e
-                )
             }
+
+            return field
         }
 
     /**
      * The service used for business logic.
      */
-    open var service: BasicService<M, ID>? = null
+    var service: BasicService<M, ID>? = null
         get() {
             if (field == null) {
                 field = applicationContext.getBean(
@@ -313,7 +316,7 @@ abstract class SuperController<M : BaseModel, ID : Any> : ControllerUtils() {
     open fun transform(model: M): Any {
         findResponseFor(SHOW)?.let { return modelMapper.map(model, it) }
 
-        return model
+        return model as Any
     }
 
     /**

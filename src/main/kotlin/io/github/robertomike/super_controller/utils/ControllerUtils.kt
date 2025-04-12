@@ -30,7 +30,7 @@ abstract class ControllerUtils : ClassUtils {
     /**
      * Sets the object mapper for JSON serialization and deserialization.
      */
-    abstract var mapper: ObjectMapper
+    abstract var objectMapper: ObjectMapper
     /**
      * Sets the validator for request validation.
      */
@@ -43,6 +43,36 @@ abstract class ControllerUtils : ClassUtils {
      * Gets or sets the base package for class lookup.
      */
     abstract var basePackage: String?
+
+    /**
+     * Returns the request class for update operations.
+     */
+    var updateRequest: Class<out Request>? = null
+
+    /**
+     * Returns the request class for store operations.
+     */
+    var storeRequest: Class<out Request>? = null
+
+    /**
+     * Returns the response class for list operations.
+     */
+    var listResponse: Class<out Response>? = null
+
+    /**
+     * Returns the response class for detail operations.
+     */
+    var detailResponse: Class<out Response>? = null
+
+    /**
+     * Returns a list of HTTP methods that are only allowed for this controller.
+     */
+    var onlyUrls = mutableListOf(INDEX, STORE, SHOW, UPDATE, DESTROY)
+
+    /**
+     * Returns a list of HTTP methods that are excluded for this controller.
+     */
+    var exceptUrls = mutableListOf<Methods>()
 
     /**
      * Finds a class by file name and class type.
@@ -69,13 +99,13 @@ abstract class ControllerUtils : ClassUtils {
 
     val urls: List<Methods>
         get() {
-            val urls = onlyUrls()
+            val urls = onlyUrls
             if (urls.isEmpty()) {
                 throw ServerException("Urls cannot be empty")
             }
 
             val finalUrls = urls.filter { url ->
-                !exceptUrls().contains(url)
+                !exceptUrls.contains(url)
             }.toList()
 
             if (finalUrls.isEmpty()) {
@@ -91,59 +121,6 @@ abstract class ControllerUtils : ClassUtils {
     open fun setConfig() {
     }
 
-    /**
-     * Returns a list of HTTP methods that are only allowed for this controller.
-     *
-     * @return A list of HTTP methods that are only allowed for this controller.
-     */
-    open fun onlyUrls(): List<Methods> {
-        return listOf(INDEX, STORE, SHOW, UPDATE, DESTROY)
-    }
-
-    /**
-     * Returns a list of HTTP methods that are excluded for this controller.
-     *
-     * @return A list of HTTP methods that are excluded for this controller.
-     */
-    open fun exceptUrls(): List<Methods> {
-        return listOf()
-    }
-
-    /**
-     * Returns the request class for update operations.
-     *
-     * @return The request class for update operations, or null if not defined.
-     */
-    open fun updateRequest(): Class<out Request>? {
-        return null
-    }
-
-    /**
-     * Returns the request class for store operations.
-     *
-     * @return The request class for store operations, or null if not defined.
-     */
-    open fun storeRequest(): Class<out Request>? {
-        return null
-    }
-
-    /**
-     * Returns the response class for list operations.
-     *
-     * @return The response class for list operations, or null if not defined.
-     */
-    open fun listResponse(): Class<out Response>? {
-        return null
-    }
-
-    /**
-     * Returns the response class for detail operations.
-     *
-     * @return The response class for detail operations, or null if not defined.
-     */
-    open fun detailResponse(): Class<out Response>? {
-        return null
-    }
 
     /**
      * Finds a request class for the given method and JSON string.
@@ -160,8 +137,8 @@ abstract class ControllerUtils : ClassUtils {
      */
     fun findRequestFor(method: Methods, json: String): Request {
         var requestClass = when (method) {
-            STORE -> storeRequest()
-            UPDATE -> updateRequest()
+            STORE -> storeRequest
+            UPDATE -> updateRequest
             else -> throw SuperControllerException("Method not supported")
         }
         if (requestClass == null) {
@@ -174,7 +151,7 @@ abstract class ControllerUtils : ClassUtils {
         }
 
         try {
-            val mappedRequest = mapper.readValue(json, requestClass)
+            val mappedRequest = objectMapper.readValue(json, requestClass)
 
             validateRequest(mappedRequest)
 
@@ -199,8 +176,8 @@ abstract class ControllerUtils : ClassUtils {
      */
     fun findResponseFor(method: Methods): Class<out Response>? {
         val responseClass = when (method) {
-            INDEX -> listResponse()
-            SHOW, UPDATE, STORE -> detailResponse()
+            INDEX -> listResponse
+            SHOW, UPDATE, STORE -> detailResponse
             else -> throw SuperControllerException("Method not supported")
         }
 

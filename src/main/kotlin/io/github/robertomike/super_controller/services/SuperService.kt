@@ -1,6 +1,5 @@
 package io.github.robertomike.super_controller.services
 
-import io.github.robertomike.hefesto.models.BaseModel
 import io.github.robertomike.super_controller.exceptions.NotFoundException
 import io.github.robertomike.super_controller.exceptions.SuperControllerException
 import io.github.robertomike.super_controller.requests.Request
@@ -21,7 +20,7 @@ import java.util.*
  * @param M The type of the model being managed by this service.
  * @param ID The type of the ID of the model being managed by this service.
  */
-abstract class SuperService<M : BaseModel, ID> : ClassUtils, BasicService<M, ID> {
+abstract class SuperService<M, ID> : ClassUtils, BasicService<M, ID> {
     /**
      * Model mapper instance used for mapping between models and requests.
      */
@@ -32,10 +31,12 @@ abstract class SuperService<M : BaseModel, ID> : ClassUtils, BasicService<M, ID>
      * Flag indicating whether to use custom find by ID implementation.
      */
     var useCustomFindById = false
+
     /**
      * Flag indicating whether to use custom save implementation.
      */
     var useCustomSave = false
+
     /**
      * Flag indicating whether to use custom delete implementation.
      */
