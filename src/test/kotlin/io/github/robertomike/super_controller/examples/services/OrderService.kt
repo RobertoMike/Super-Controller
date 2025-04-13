@@ -4,23 +4,22 @@ import io.github.robertomike.baradum.filters.ExactFilter
 import io.github.robertomike.baradum.filters.Filter
 import io.github.robertomike.baradum.filters.IntervalFilter
 import io.github.robertomike.hefesto.actions.JoinFetch
+import io.github.robertomike.super_controller.examples.mappers.OrderMapper
 import io.github.robertomike.super_controller.examples.models.Order
 import io.github.robertomike.super_controller.examples.repositories.OrderRepository
 import io.github.robertomike.super_controller.examples.repositories.UserRepository
 import io.github.robertomike.super_controller.examples.requests.orders.StoreOrderRequest
+import io.github.robertomike.super_controller.examples.requests.orders.UpdateOrderRequest
 import io.github.robertomike.super_controller.exceptions.NotFoundException
-import io.github.robertomike.super_controller.requests.Request
-import io.github.robertomike.super_controller.services.SuperService
 import io.github.robertomike.super_controller.services.SuperServiceWithFilters
 import org.springframework.stereotype.Service
 
 @Service
 class OrderService(
     override val repository: OrderRepository,
-    private val userRepository: UserRepository
-) : SuperServiceWithFilters<Order, Long>() {
-
-
+    private val userRepository: UserRepository,
+    override val mapper: OrderMapper
+) : SuperServiceWithFilters<Order, Long, StoreOrderRequest, UpdateOrderRequest>() {
     override fun filters(): List<Filter<*>> {
         return listOf(
             IntervalFilter("price"),
@@ -32,9 +31,8 @@ class OrderService(
         return listOf(JoinFetch.make("user"))
     }
 
-    override fun beforeStore(model: Order, request: Request) {
-        val orderRequest = request as StoreOrderRequest
-        val user = userRepository.findById(orderRequest.userId!!)
+    override fun beforeStore(model: Order, request: StoreOrderRequest) {
+        val user = userRepository.findById(request.userId!!)
         model.user = user.orElseThrow { NotFoundException("User not found") }
     }
 }

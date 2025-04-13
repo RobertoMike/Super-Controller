@@ -15,7 +15,7 @@ import io.github.robertomike.super_controller.requests.Request
  *
  * @param <ID> the type of the resource identifier.
  */
-abstract class Policy<ID> {
+abstract class Policy<ID, out SR: Request, out UR: Request> {
     /**
      * Determines whether the current user can view all resources.
      *
@@ -29,7 +29,7 @@ abstract class Policy<ID> {
      * @param request the request containing the new resource data.
      * @return true if the user can store the resource, false otherwise.
      */
-    abstract fun store(request: Request): Boolean
+    abstract fun store(request: @UnsafeVariance SR): Boolean
 
     /**
      * Determines whether the current user can view a specific resource.
@@ -46,7 +46,7 @@ abstract class Policy<ID> {
      * @param request the request containing the updated resource data.
      * @return true if the user can update the resource, false otherwise.
      */
-    abstract fun update(id: ID, request: Request): Boolean
+    abstract fun update(id: ID, request: @UnsafeVariance UR): Boolean
 
     /**
      * Determines whether the current user can destroy a specific resource.

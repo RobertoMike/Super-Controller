@@ -1,9 +1,6 @@
 package io.github.robertomike.super_controller.config
 
 import io.github.robertomike.super_controller.Application
-import org.modelmapper.ModelMapper
-import org.modelmapper.convention.MatchingStrategies
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.FilterType
@@ -23,20 +20,4 @@ import org.springframework.context.annotation.FilterType
     ]
 )
 open class RegistrationConfig {
-    /**
-     * Creates a [ModelMapper] bean with a strict matching strategy.
-     *
-     * The [ModelMapper] is used to map between different JavaBean objects.
-     * The strict matching strategy ensures that only properties with the same name and type are mapped.
-     *
-     * @return a [ModelMapper] instance with a strict matching strategy
-     * @see ModelMapper
-     * @see MatchingStrategies.STRICT
-     */
-    @Bean
-    open fun modelMapper(): ModelMapper {
-        val modelMapper = ModelMapper()
-        modelMapper.configuration.setMatchingStrategy(MatchingStrategies.STRICT)
-        return modelMapper
-    }
 }

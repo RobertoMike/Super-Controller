@@ -4,6 +4,7 @@ import io.github.robertomike.baradum.Baradum
 import io.github.robertomike.baradum.filters.Filter
 import io.github.robertomike.hefesto.actions.JoinFetch
 import io.github.robertomike.hefesto.models.BaseModel
+import io.github.robertomike.super_controller.requests.Request
 import io.github.robertomike.super_controller.utils.PageUtil
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -17,7 +18,7 @@ import org.springframework.data.domain.PageRequest
  * @param M The type of the model being managed by this service.
  * @param ID The type of the ID of the model being managed by this service.
  */
-abstract class SuperServiceWithFilters<M : BaseModel, ID> : SuperService<M, ID>() {
+abstract class SuperServiceWithFilters<M : BaseModel, ID, SR: Request, UR: Request> : SuperService<M, ID, SR, UR>() {
     /**
      * Returns a list of filters to be applied to the service's queries.
      *

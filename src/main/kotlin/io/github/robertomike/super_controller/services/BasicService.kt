@@ -13,7 +13,7 @@ import org.springframework.data.domain.PageRequest
  * @param M The type of data being managed by the service.
  * @param ID The type of identifier used to uniquely identify the data.
  */
-interface BasicService<M, ID> {
+interface BasicService<M, ID, out SR: Request, out UR: Request> {
     /**
      * Retrieves a page of data.
      *
@@ -32,7 +32,7 @@ interface BasicService<M, ID> {
      * @param request The request containing the data to be created.
      * @return The newly created data.
      */
-    fun store(request: Request): M
+    fun store(request: @UnsafeVariance SR): M
 
     /**
      * Retrieves a piece of data by its identifier.
@@ -53,7 +53,7 @@ interface BasicService<M, ID> {
      * @param request The request containing the updated data.
      * @return The updated data.
      */
-    fun update(id: ID, request: Request): M
+    fun update(id: ID, request: @UnsafeVariance UR): M
 
     /**
      * Deletes a piece of data.

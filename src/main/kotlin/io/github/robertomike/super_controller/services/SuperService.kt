@@ -2,17 +2,15 @@ package io.github.robertomike.super_controller.services
 
 import io.github.robertomike.super_controller.exceptions.NotFoundException
 import io.github.robertomike.super_controller.exceptions.SuperControllerException
+import io.github.robertomike.super_controller.mappers.RequestMapper
 import io.github.robertomike.super_controller.requests.Request
 import io.github.robertomike.super_controller.utils.ClassUtils
 import jakarta.annotation.PostConstruct
-import org.modelmapper.ModelMapper
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.repository.CrudRepository
 import org.springframework.data.repository.PagingAndSortingRepository
 import org.springframework.data.repository.Repository
-import java.util.*
 
 /**
  * Abstract base class for services that provides basic CRUD operations.
@@ -20,28 +18,7 @@ import java.util.*
  * @param M The type of the model being managed by this service.
  * @param ID The type of the ID of the model being managed by this service.
  */
-abstract class SuperService<M, ID> : ClassUtils, BasicService<M, ID> {
-    /**
-     * Model mapper instance used for mapping between models and requests.
-     */
-    @Autowired
-    lateinit var modelMapper: ModelMapper
-
-    /**
-     * Flag indicating whether to use custom find by ID implementation.
-     */
-    var useCustomFindById = false
-
-    /**
-     * Flag indicating whether to use custom save implementation.
-     */
-    var useCustomSave = false
-
-    /**
-     * Flag indicating whether to use custom delete implementation.
-     */
-    var useCustomDelete = false
-
+abstract class SuperService<M, ID, SR : Request, UR : Request> : ClassUtils, BasicService<M, ID, SR, UR> {
     /**
      * Initializes the service by calling the [config] method.
      */
@@ -85,7 +62,7 @@ abstract class SuperService<M, ID> : ClassUtils, BasicService<M, ID> {
      * @param model The model being stored.
      * @param request The request.
      */
-    open fun beforeStore(model: M, request: Request) {
+    open fun beforeStore(model: M, request: SR) {
     }
 
     /**
@@ -94,12 +71,10 @@ abstract class SuperService<M, ID> : ClassUtils, BasicService<M, ID> {
      * @param request The request.
      * @return The stored model.
      */
-    override fun store(request: Request): M {
-        val model = newModel()
+    override fun store(request: SR): M {
+        val model = mappingStore(request)
 
         beforeStore(model, request)
-
-        mappingStore(model, request)
 
         save(model)
 
@@ -114,7 +89,7 @@ abstract class SuperService<M, ID> : ClassUtils, BasicService<M, ID> {
      * @param model The stored model.
      * @param request The request.
      */
-    open fun afterStore(model: M, request: Request) {
+    open fun afterStore(model: M, request: SR) {
     }
 
     /**
@@ -134,7 +109,7 @@ abstract class SuperService<M, ID> : ClassUtils, BasicService<M, ID> {
     override fun show(id: ID): M {
         beforeShow(id)
 
-        val model = searchModelById(id)
+        val model = findById(id)
 
         afterShow(model)
 
@@ -155,7 +130,7 @@ abstract class SuperService<M, ID> : ClassUtils, BasicService<M, ID> {
      * @param model The model being updated.
      * @param request The request.
      */
-    open fun beforeUpdate(model: M, request: Request) {
+    open fun beforeUpdate(model: M, request: UR) {
     }
 
     /**
@@ -165,12 +140,12 @@ abstract class SuperService<M, ID> : ClassUtils, BasicService<M, ID> {
      * @param request The request.
      * @return The updated model.
      */
-    override fun update(id: ID, request: Request): M {
-        val model = searchModelById(id)
+    override fun update(id: ID, request: UR): M {
+        val model = findById(id)
 
         beforeUpdate(model, request)
 
-        mappingUpdate(model, request)
+        mappingUpdate(request, model)
 
         save(model)
 
@@ -185,27 +160,25 @@ abstract class SuperService<M, ID> : ClassUtils, BasicService<M, ID> {
      * @param model The updated model.
      * @param request The request.
      */
-    open fun afterUpdate(model: M, request: Request) {
+    open fun afterUpdate(model: M, request: UR) {
     }
 
     /**
      * Maps the request to the model for store operation.
      *
-     * @param model The model being stored.
      * @param request The request.
      */
-    open fun mappingStore(model: M, request: Request) {
-        modelMapper.map(request, model)
+    open fun mappingStore(request: SR): M {
+        return mapper.map(request)
     }
 
     /**
      * Maps the request to the model for update operation.
      *
-     * @param model The model being updated.
      * @param request The request.
      */
-    open fun mappingUpdate(model: M, request: Request) {
-        modelMapper.map(request, model)
+    open fun mappingUpdate(request: UR, target: M) {
+        mapper.update(request, target)
     }
 
     /**
@@ -224,9 +197,9 @@ abstract class SuperService<M, ID> : ClassUtils, BasicService<M, ID> {
     override fun delete(id: ID) {
         beforeDelete(id)
 
-        val model = searchModelById(id)
+        val model = findById(id)
 
-        deleteModel(model)
+        deleteByModel(model)
 
         afterDelete(model)
     }
@@ -244,12 +217,7 @@ abstract class SuperService<M, ID> : ClassUtils, BasicService<M, ID> {
      *
      * @param model The model to save.
      */
-    protected open fun save(model: M) {
-        if (useCustomSave) {
-            customSave(model)
-            return
-        }
-
+    open fun save(model: M) {
         repositoryExtendsCrudRepository()
             .save(model)
     }
@@ -259,12 +227,7 @@ abstract class SuperService<M, ID> : ClassUtils, BasicService<M, ID> {
      *
      * @param model The model to delete.
      */
-    protected open fun deleteModel(model: M) {
-        if (useCustomDelete) {
-            customDelete(model)
-            return
-        }
-
+    open fun deleteByModel(model: M) {
         repositoryExtendsCrudRepository()
             .delete(model)
     }
@@ -305,11 +268,10 @@ abstract class SuperService<M, ID> : ClassUtils, BasicService<M, ID> {
      * @param id The ID of the model to search for.
      * @return The model, or throws [NotFoundException] if not found.
      */
-    open fun searchModelById(id: ID): M {
+    open fun findById(id: ID): M {
         val repository = repository
 
         val model = when {
-            useCustomFindById -> customFindById(id)
             repository is CrudRepository<M, ID> -> repository.findById(id)
             else -> throw SuperControllerException(
                 "The repository doesn't extend from CrudRepository and customFindById is not active"
@@ -320,59 +282,6 @@ abstract class SuperService<M, ID> : ClassUtils, BasicService<M, ID> {
             NotFoundException(
                 "Cannot find model with id $id"
             )
-        }
-    }
-
-    /**
-     * Custom save implementation.
-     *
-     * @param model The model to save.
-     * @throws SuperControllerException if not implemented.
-     */
-    open fun customSave(model: M) {
-        throw SuperControllerException(
-            "Cannot save. The service doesn't override customSave"
-        )
-    }
-
-    /**
-     * Custom delete implementation.
-     *
-     * @param model The model to delete.
-     * @throws SuperControllerException if not implemented.
-     */
-    open fun customDelete(model: M) {
-        throw SuperControllerException(
-            "Cannot delete. The service doesn't override customDelete"
-        )
-    }
-
-    /**
-     * Custom find by ID implementation.
-     *
-     * @param id The ID of the model to find.
-     * @return The model, or throws [NotFoundException] if not found.
-     * @throws SuperControllerException if not implemented.
-     */
-    open fun customFindById(id: ID): Optional<M> {
-        throw SuperControllerException(
-            "The service doesn't override customFindById"
-        )
-    }
-
-    /**
-     * Creates a new instance of the model.
-     *
-     * @return A new instance of the model.
-     */
-    protected open fun newModel(): M {
-        val constructor = model.constructors.first { c -> c.parameterCount == 0 }
-        return try {
-            constructor?.let { model.getConstructor().newInstance() }
-
-            constructor.newInstance() as M
-        } catch (e: Exception) {
-            throw SuperControllerException("Can't create new model instance", e)
         }
     }
 
@@ -389,5 +298,13 @@ abstract class SuperService<M, ID> : ClassUtils, BasicService<M, ID> {
     open val repository: Repository<M, ID>
         get() {
             throw SuperControllerException("Get repository not implemented")
+        }
+
+    /**
+     * The mapper used for to map requests and responses for business logic.
+     */
+    open val mapper: RequestMapper<M, SR, UR>
+        get() {
+            throw SuperControllerException("Mapper not implemented")
         }
 }

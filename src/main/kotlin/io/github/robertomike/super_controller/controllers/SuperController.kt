@@ -3,23 +3,32 @@ package io.github.robertomike.super_controller.controllers
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.robertomike.super_controller.config.ConfigProperties
 import io.github.robertomike.super_controller.enums.Methods
-import io.github.robertomike.super_controller.enums.Methods.*
+import io.github.robertomike.super_controller.enums.Methods.DESTROY
+import io.github.robertomike.super_controller.enums.Methods.INDEX
+import io.github.robertomike.super_controller.enums.Methods.SHOW
+import io.github.robertomike.super_controller.enums.Methods.STORE
+import io.github.robertomike.super_controller.enums.Methods.UPDATE
 import io.github.robertomike.super_controller.exceptions.SuperControllerException
 import io.github.robertomike.super_controller.exceptions.UnauthorizedException
+import io.github.robertomike.super_controller.mappers.ResponseMapper
 import io.github.robertomike.super_controller.policies.Policy
 import io.github.robertomike.super_controller.requests.Request
+import io.github.robertomike.super_controller.responses.Response
 import io.github.robertomike.super_controller.services.BasicService
 import io.github.robertomike.super_controller.utils.ControllerUtils
 import jakarta.annotation.PostConstruct
 import jakarta.validation.Validator
 import org.atteo.evo.inflector.English
-import org.modelmapper.ModelMapper
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.http.HttpStatus
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo.BuilderConfiguration
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping
@@ -36,10 +45,26 @@ import java.util.*
  * @param ID The type of the ID used to identify the model.
  */
 abstract class SuperController<M, ID : Any>() : ControllerUtils() {
-    @JvmOverloads constructor(
-        service: BasicService<M, ID>,
+    /**
+     * The service used for business logic.
+     */
+    lateinit var service: BasicService<M, ID, Request, Request>
+
+    /**
+     * The policy used for authorization.
+     */
+    var policy: Policy<ID, Request, Request>? = null
+
+    /**
+     * Whether authorization is required for this controller.
+     */
+    var needAuthorization = true
+
+    @JvmOverloads
+    constructor(
+        service: BasicService<M, ID, Request, Request>,
         needAuthorization: Boolean = true,
-        policy: Policy<ID>? = null,
+        policy: Policy<ID, Request, Request>? = null,
         basePackage: String? = null
     ) : this() {
         this.needAuthorization = needAuthorization
@@ -77,56 +102,17 @@ abstract class SuperController<M, ID : Any>() : ControllerUtils() {
     @Autowired
     override lateinit var validator: Validator
 
+
     /**
-     * The model mapper used for mapping between models and requests/responses (DTOs).
+     * The mapper used for to map requests and responses for business logic.
      */
-    @Autowired
-    lateinit var modelMapper: ModelMapper
+    open val mapper: ResponseMapper<M, out Response, out Response>? = null
 
     /**
      * The configuration properties for the super controller.
      */
     @Autowired
     override lateinit var properties: ConfigProperties
-
-    /**
-     * Whether authorization is required for this controller.
-     */
-    var needAuthorization = true
-
-    /**
-     * The policy used for authorization.
-     */
-    var policy: Policy<ID>? = null
-        get() {
-            if (field == null) {
-                field = applicationContext.getBean(
-                    findClass(
-                        nameModel + properties.classSuffix.policy,
-                        Policy::class.java
-                    ) as Class<Policy<ID>>
-                )
-            }
-
-            return field
-        }
-
-    /**
-     * The service used for business logic.
-     */
-    var service: BasicService<M, ID>? = null
-        get() {
-            if (field == null) {
-                field = applicationContext.getBean(
-                    findClass(
-                        nameModel + properties.classSuffix.service,
-                        BasicService::class.java
-                    ) as Class<BasicService<M, ID>>
-                )
-            }
-
-            return field
-        }
 
     /**
      * The base URL for the controller
@@ -173,6 +159,22 @@ abstract class SuperController<M, ID : Any>() : ControllerUtils() {
     @PostConstruct
     fun init() {
         setConfig()
+
+        service = applicationContext.getBean(
+            findClass(
+                nameModel + properties.classSuffix.service,
+                BasicService::class.java
+            ) as Class<BasicService<M, ID, Request, Request>>
+        )
+
+        if (needAuthorization) {
+            policy = applicationContext.getBean(
+                findClass(
+                    nameModel + properties.classSuffix.policy,
+                    Policy::class.java
+                ) as Class<Policy<ID, Request, Request>>
+            )
+        }
 
         if (basePackage == null) {
             throw SuperControllerException("The base package is not defined")
@@ -254,7 +256,7 @@ abstract class SuperController<M, ID : Any>() : ControllerUtils() {
     ): Page<*> {
         executePolicy(INDEX)
         return transform(
-            service!!.index(PageRequest.of(page, size))
+            service.index(PageRequest.of(page, size))
         )
     }
 
@@ -265,10 +267,10 @@ abstract class SuperController<M, ID : Any>() : ControllerUtils() {
      */
     @ResponseStatus(HttpStatus.CREATED)
     open fun store(@RequestBody json: String): Any {
-        val request = findRequestFor(STORE, json)
+        val request = findRequestForAndMap(STORE, json)
         executePolicy(STORE, request = request)
         return transform(
-            service!!.store(request)
+            service.store(request)
         )
     }
 
@@ -280,7 +282,7 @@ abstract class SuperController<M, ID : Any>() : ControllerUtils() {
      */
     open fun show(@PathVariable id: ID): Any {
         executePolicy(SHOW, id)
-        return transform(service!!.show(id))
+        return transform(service.show(id))
     }
 
     /**
@@ -290,10 +292,10 @@ abstract class SuperController<M, ID : Any>() : ControllerUtils() {
      * @param json The JSON data for the updated model
      */
     open fun update(@PathVariable id: ID, @RequestBody json: String): Any {
-        val request = findRequestFor(UPDATE, json)
+        val request = findRequestForAndMap(UPDATE, json)
         executePolicy(UPDATE, id, request)
         return transform(
-            service!!.update(id, request)
+            service.update(id, request)
         )
     }
 
@@ -304,7 +306,7 @@ abstract class SuperController<M, ID : Any>() : ControllerUtils() {
      */
     open fun destroy(@PathVariable id: ID) {
         executePolicy(DESTROY, id)
-        service!!.delete(id)
+        service.delete(id)
     }
 
     /**
@@ -314,7 +316,7 @@ abstract class SuperController<M, ID : Any>() : ControllerUtils() {
      * @return The transformed response
      */
     open fun transform(model: M): Any {
-        findResponseFor(SHOW)?.let { return modelMapper.map(model, it) }
+        mapper?.let { return it.mapDetail(model) }
 
         return model as Any
     }
@@ -326,7 +328,7 @@ abstract class SuperController<M, ID : Any>() : ControllerUtils() {
      * @return The transformed response
      */
     open fun transform(page: Page<M>): Page<*> {
-        findResponseFor(INDEX)?.let { return page.map { m -> modelMapper.map(m, it) } }
+        mapper?.let { return page.map { m -> it.mapList(m) } }
 
         return page
     }
@@ -343,7 +345,7 @@ abstract class SuperController<M, ID : Any>() : ControllerUtils() {
             return
         }
 
-        val policy: Policy<ID> = policy ?: throw SuperControllerException("Policy not found")
+        val policy = policy ?: throw SuperControllerException("Policy not found")
 
         if (method in listOf(SHOW, UPDATE, DESTROY) && id == null) {
             throw SuperControllerException("Id cannot be null")

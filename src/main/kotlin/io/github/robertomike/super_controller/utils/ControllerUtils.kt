@@ -55,16 +55,6 @@ abstract class ControllerUtils : ClassUtils {
     var storeRequest: Class<out Request>? = null
 
     /**
-     * Returns the response class for list operations.
-     */
-    var listResponse: Class<out Response>? = null
-
-    /**
-     * Returns the response class for detail operations.
-     */
-    var detailResponse: Class<out Response>? = null
-
-    /**
      * Returns a list of HTTP methods that are only allowed for this controller.
      */
     var onlyUrls = mutableListOf(INDEX, STORE, SHOW, UPDATE, DESTROY)
@@ -135,7 +125,7 @@ abstract class ControllerUtils : ClassUtils {
      * @return The deserialized request object, or throws a [SuperControllerException] if no matching class is found.
      * @throws SuperControllerException If no matching request class is found, or if the JSON string is invalid.
      */
-    fun findRequestFor(method: Methods, json: String): Request {
+    fun findRequestForAndMap(method: Methods, json: String): Request {
         var requestClass = when (method) {
             STORE -> storeRequest
             UPDATE -> updateRequest
@@ -162,32 +152,6 @@ abstract class ControllerUtils : ClassUtils {
             throw e
         } catch (e: Exception) {
             throw SuperControllerException("The json is not valid", e)
-        }
-    }
-
-    /**
-     * Finds the response class for the given method.
-     *
-     * This method attempts to find a response class that matches the given method. If a matching class is found, it is returned. If no matching class is found, the method attempts to find a default response class. If no default response class is found, null is returned.
-     *
-     * @param method The method for which to find a response class
-     * @return The response class, or null if not found
-     * @throws SuperControllerException If the method is not supported
-     */
-    fun findResponseFor(method: Methods): Class<out Response>? {
-        val responseClass = when (method) {
-            INDEX -> listResponse
-            SHOW, UPDATE, STORE -> detailResponse
-            else -> throw SuperControllerException("Method not supported")
-        }
-
-        return try {
-            responseClass ?: findClass(
-                nameModel + properties.classSuffix.response,
-                Response::class.java
-            )
-        } catch (e: Exception) {
-            null
         }
     }
 

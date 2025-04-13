@@ -1,17 +1,17 @@
-package io.github.robertomike.super_controller.units;
+package io.github.robertomike.super_controller.units
 
 import io.github.robertomike.super_controller.BasicTest
 import io.github.robertomike.super_controller.controllers.SuperController
-import io.github.robertomike.super_controller.enums.Methods
+import io.github.robertomike.super_controller.enums.Methods.INDEX
+import io.github.robertomike.super_controller.enums.Methods.SHOW
+import io.github.robertomike.super_controller.enums.Methods.STORE
 import io.github.robertomike.super_controller.examples.controllers.OrderController
-import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import io.github.robertomike.super_controller.enums.Methods.*
 import io.github.robertomike.super_controller.examples.models.Order
 import io.github.robertomike.super_controller.exceptions.ServerException
 import io.github.robertomike.super_controller.exceptions.SuperControllerException
-import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.util.ReflectionTestUtils
 
 class SuperControllerTest : BasicTest() {
@@ -21,14 +21,7 @@ class SuperControllerTest : BasicTest() {
     @Test
     fun findRequestFor_ThrowError() {
         assertThrows<SuperControllerException> {
-            controller.findRequestFor(INDEX, "{}")
-        }
-    }
-
-    @Test
-    fun findResponseFor_ThrowError() {
-        assertThrows<SuperControllerException> {
-            controller.findResponseFor(DESTROY)
+            controller.findRequestForAndMap(INDEX, "{}")
         }
     }
 
