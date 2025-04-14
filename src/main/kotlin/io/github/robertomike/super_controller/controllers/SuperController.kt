@@ -1,6 +1,7 @@
 package io.github.robertomike.super_controller.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.github.robertomike.springrules.utils.getBeanByClassOrName
 import io.github.robertomike.super_controller.config.ConfigProperties
 import io.github.robertomike.super_controller.enums.Methods
 import io.github.robertomike.super_controller.enums.Methods.DESTROY
@@ -160,20 +161,12 @@ abstract class SuperController<M, ID : Any>() : ControllerUtils() {
     fun init() {
         setConfig()
 
-        service = applicationContext.getBean(
-            findClass(
-                nameModel + properties.classSuffix.service,
-                BasicService::class.java
-            ) as Class<BasicService<M, ID, Request, Request>>
-        )
+        if (::service.isInitialized.not()) {
+            service = applicationContext.resolveBeanFor(nameModel + properties.classSuffix.service)
+        }
 
-        if (needAuthorization) {
-            policy = applicationContext.getBean(
-                findClass(
-                    nameModel + properties.classSuffix.policy,
-                    Policy::class.java
-                ) as Class<Policy<ID, Request, Request>>
-            )
+        if (needAuthorization && policy == null) {
+            policy = applicationContext.resolveBeanFor(nameModel + properties.classSuffix.policy)
         }
 
         if (basePackage == null) {
@@ -365,5 +358,14 @@ abstract class SuperController<M, ID : Any>() : ControllerUtils() {
         if (!authorized) {
             throw UnauthorizedException("Unauthorized access to " + method.name + " for " + nameModel)
         }
+    }
+
+    private inline fun <reified T : Any> ApplicationContext.resolveBeanFor(className: String): T {
+        return this.getBeanByClassOrName(
+            findClass(
+                className,
+                T::class.java
+            )
+        ) as T
     }
 }

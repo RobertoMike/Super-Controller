@@ -3,13 +3,16 @@ package io.github.robertomike.super_controller.utils
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.robertomike.super_controller.config.ConfigProperties
 import io.github.robertomike.super_controller.enums.Methods
-import io.github.robertomike.super_controller.enums.Methods.*
+import io.github.robertomike.super_controller.enums.Methods.DESTROY
+import io.github.robertomike.super_controller.enums.Methods.INDEX
+import io.github.robertomike.super_controller.enums.Methods.SHOW
+import io.github.robertomike.super_controller.enums.Methods.STORE
+import io.github.robertomike.super_controller.enums.Methods.UPDATE
 import io.github.robertomike.super_controller.exceptions.BasicException
 import io.github.robertomike.super_controller.exceptions.ServerException
 import io.github.robertomike.super_controller.exceptions.SuperControllerException
 import io.github.robertomike.super_controller.policies.Policy
 import io.github.robertomike.super_controller.requests.Request
-import io.github.robertomike.super_controller.responses.Response
 import io.github.robertomike.super_controller.services.BasicService
 import jakarta.validation.ConstraintViolationException
 import jakarta.validation.Validator
@@ -27,18 +30,22 @@ abstract class ControllerUtils : ClassUtils {
      * Sets the configuration properties for this controller.
      */
     abstract var properties: ConfigProperties
+
     /**
      * Sets the object mapper for JSON serialization and deserialization.
      */
     abstract var objectMapper: ObjectMapper
+
     /**
      * Sets the validator for request validation.
      */
     abstract var validator: Validator
+
     /**
      * Gets the name of the model associated with this controller.
      */
     abstract val nameModel: String
+
     /**
      * Gets or sets the base package for class lookup.
      */
@@ -74,7 +81,6 @@ abstract class ControllerUtils : ClassUtils {
     fun <O> findClass(fileName: String, clazz: Class<O>): Class<O> {
         val packageClass = when (clazz) {
             Request::class.java -> properties.path.requests
-            Response::class.java -> properties.path.responses
             Policy::class.java -> properties.path.policies
             BasicService::class.java -> properties.path.services
             else -> throw SuperControllerException("Class not supported")
@@ -131,6 +137,7 @@ abstract class ControllerUtils : ClassUtils {
             UPDATE -> updateRequest
             else -> throw SuperControllerException("Method not supported")
         }
+
         if (requestClass == null) {
             val methodName = StringUtils.capitalize(method.name.lowercase())
 
@@ -148,7 +155,7 @@ abstract class ControllerUtils : ClassUtils {
             return mappedRequest
         } catch (e: BasicException) {
             throw e
-        }  catch (e: ConstraintViolationException) {
+        } catch (e: ConstraintViolationException) {
             throw e
         } catch (e: Exception) {
             throw SuperControllerException("The json is not valid", e)

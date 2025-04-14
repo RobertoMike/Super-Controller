@@ -47,12 +47,6 @@
       "defaultValue": "Request"
     },
     {
-      "name": "super-controller.class-suffix.response",
-      "type": "java.lang.String",
-      "description": "Class suffix for response classes.",
-      "defaultValue": "Response"
-    },
-    {
       "name": "super-controller.class-suffix.service",
       "type": "java.lang.String",
       "description": "Class suffix for service classes.",

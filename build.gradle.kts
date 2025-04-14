@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "io.github.robertomike"
-version = "1.0.2"
+version = "1.0.3"
 
 val pomGroupId = group
 val pomVersion = version
@@ -16,7 +16,7 @@ val baseArtifactId = "super-controller"
 val jdkCompileVersion = 17
 val springBootVersion = "3.0.0"
 val baradumApacheVersion = "2.0.2"
-val springRules = "2.0.4"
+val springRules = "2.0.5"
 
 repositories {
     mavenCentral()

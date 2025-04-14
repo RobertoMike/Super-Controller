@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/assets")
 class UserController(service: UserService, override val mapper: UserResponseMapper) :
     SuperController<User, Long>(service) {
     init {

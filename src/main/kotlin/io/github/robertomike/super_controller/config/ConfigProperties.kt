@@ -33,8 +33,6 @@ class Path {
     @field:PathConstraint
     var requests: String = ""
     @field:PathConstraint
-    var responses: String = ""
-    @field:PathConstraint
     var policies: String = ""
     @field:PathConstraint
     var services: String = ""
@@ -43,8 +41,6 @@ class Path {
 class ClassSuffix {
     @field:PascalCase
     var request: String = ""
-    @field:PascalCase
-    var response: String = ""
     @field:PascalCase
     var policy: String = ""
     @field:PascalCase
