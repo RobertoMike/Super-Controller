@@ -16,7 +16,6 @@ import io.github.robertomike.super_controller.policies.Policy
 import io.github.robertomike.super_controller.requests.Request
 import io.github.robertomike.super_controller.responses.Response
 import io.github.robertomike.super_controller.services.BasicService
-import io.github.robertomike.super_controller.utils.ControllerUtils
 import jakarta.annotation.PostConstruct
 import jakarta.validation.Validator
 import org.atteo.evo.inflector.English

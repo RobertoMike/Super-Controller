@@ -1,4 +1,4 @@
-package io.github.robertomike.super_controller.utils
+package io.github.robertomike.super_controller.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.robertomike.super_controller.config.ConfigProperties
@@ -14,6 +14,7 @@ import io.github.robertomike.super_controller.exceptions.SuperControllerExceptio
 import io.github.robertomike.super_controller.policies.Policy
 import io.github.robertomike.super_controller.requests.Request
 import io.github.robertomike.super_controller.services.BasicService
+import io.github.robertomike.super_controller.utils.ClassUtils
 import jakarta.validation.ConstraintViolationException
 import jakarta.validation.ValidationException
 import jakarta.validation.Validator
