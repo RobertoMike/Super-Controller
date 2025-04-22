@@ -15,6 +15,7 @@ import io.github.robertomike.super_controller.policies.Policy
 import io.github.robertomike.super_controller.requests.Request
 import io.github.robertomike.super_controller.services.BasicService
 import jakarta.validation.ConstraintViolationException
+import jakarta.validation.ValidationException
 import jakarta.validation.Validator
 import org.springframework.util.StringUtils
 
@@ -141,10 +142,9 @@ abstract class ControllerUtils : ClassUtils {
         if (requestClass == null) {
             val methodName = StringUtils.capitalize(method.name.lowercase())
 
-            requestClass = findClass(
-                methodName + nameModel + properties.classSuffix.request,
-                Request::class.java
-            )
+            requestClass = findRequestClass(methodName)
+
+            saveRequestClass(method, requestClass)
         }
 
         try {
@@ -155,10 +155,34 @@ abstract class ControllerUtils : ClassUtils {
             return mappedRequest
         } catch (e: BasicException) {
             throw e
+        } catch (e: ValidationException) {
+            throw e
         } catch (e: ConstraintViolationException) {
             throw e
         } catch (e: Exception) {
             throw SuperControllerException("The json is not valid", e)
+        }
+    }
+
+    private fun findRequestClass(methodName: String): Class<Request> {
+        return try {
+            findClass(
+                methodName + nameModel + properties.classSuffix.request,
+                Request::class.java
+            )
+        } catch (e: Exception) {
+            findClass(
+                StringUtils.uncapitalize(nameModel) + ".$methodName${properties.classSuffix.request}",
+                Request::class.java
+            )
+        }
+    }
+
+    private fun saveRequestClass(method: Methods, requestClass: Class<Request>) {
+        when (method) {
+            STORE -> storeRequest = requestClass
+            UPDATE -> updateRequest = requestClass
+            else -> throw SuperControllerException("Method not supported")
         }
     }
 
