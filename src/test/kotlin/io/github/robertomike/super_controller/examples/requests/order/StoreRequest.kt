@@ -1,9 +1,9 @@
-package io.github.robertomike.super_controller.examples.requests.orders
+package io.github.robertomike.super_controller.examples.requests.order
 
 import io.github.robertomike.super_controller.requests.Request
 import jakarta.validation.constraints.NotNull
 
-data class StoreOrderRequest(
+data class StoreRequest(
     @field:NotNull
     var name: String? = null,
     @field:NotNull
