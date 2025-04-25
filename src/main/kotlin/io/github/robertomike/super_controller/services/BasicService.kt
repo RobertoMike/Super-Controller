@@ -1,7 +1,9 @@
 package io.github.robertomike.super_controller.services
 
+import io.github.robertomike.super_controller.exceptions.SuperControllerException
+import io.github.robertomike.super_controller.mappers.RequestMapper
 import io.github.robertomike.super_controller.requests.Request
-import org.springframework.data.domain.Page
+import io.github.robertomike.super_controller.utils.GenericUtil
 import org.springframework.data.domain.PageRequest
 
 /**
@@ -13,7 +15,15 @@ import org.springframework.data.domain.PageRequest
  * @param M The type of data being managed by the service.
  * @param ID The type of identifier used to uniquely identify the data.
  */
-interface BasicService<M, ID, out SR: Request, out UR: Request> {
+interface BasicService<M, PAGE, ID, out SR : Request, out UR : Request> : GenericUtil {
+    /**
+     * The mapper used for to map requests and responses for business logic.
+     */
+    val mapper: RequestMapper<M, @UnsafeVariance SR, @UnsafeVariance UR>
+        get() {
+            throw SuperControllerException("Mapper not implemented")
+        }
+
     /**
      * Retrieves a page of data.
      *
@@ -22,7 +32,7 @@ interface BasicService<M, ID, out SR: Request, out UR: Request> {
      * @param page The page request containing the pagination information.
      * @return A page of data.
      */
-    fun index(page: PageRequest): Page<M>
+    fun index(page: PageRequest): PAGE
 
     /**
      * Creates a new piece of data.
@@ -63,4 +73,25 @@ interface BasicService<M, ID, out SR: Request, out UR: Request> {
      * @param id The identifier of the data to be deleted.
      */
     fun delete(id: ID)
+
+
+    fun findById(id: ID): M
+
+    /**
+     * Maps the request to the model for store operation.
+     *
+     * @param request The request.
+     */
+    fun mappingStore(request: @UnsafeVariance SR): M {
+        return mapper.map(request)
+    }
+
+    /**
+     * Maps the request to the model for update operation.
+     *
+     * @param request The request.
+     */
+    fun mappingUpdate(request: @UnsafeVariance UR, target: M) {
+        mapper.update(request, target)
+    }
 }
