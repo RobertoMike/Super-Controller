@@ -173,7 +173,7 @@ abstract class ControllerUtils : ClassUtils {
             )
         } catch (e: Exception) {
             findClass(
-                StringUtils.uncapitalize(nameModel) + ".$methodName${properties.classSuffix.request}",
+                StringUtils.uncapitalize(nameModel) + ".$methodName$nameModel${properties.classSuffix.request}",
                 Request::class.java
             )
         }
