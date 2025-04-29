@@ -1,69 +1,53 @@
 package io.github.robertomike.super_controller.config
 
-import io.github.robertomike.super_controller.exceptions.SuperControllerException
+import io.github.robertomike.jakidate.validations.strings.cases.PascalCase
+import io.github.robertomike.super_controller.validations.PathConstraint
+import jakarta.validation.Valid
+import jakarta.validation.constraints.NotBlank
+import org.jetbrains.annotations.NotNull
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.PropertySource
-import jakarta.annotation.PostConstruct
+import org.springframework.validation.annotation.Validated
 
 @ConfigurationProperties(prefix = "super-controller")
 @PropertySource("classpath:super-controller.properties")
-data class ConfigProperties(
-    val path: Path = Path(),
-    var prefixUrl: String = "",
-    var basePackage: String = "",
-    val classSuffix: ClassSuffix = ClassSuffix(),
-    val controllerAdvice: ControllerAdvice = ControllerAdvice()
-) {
-    @PostConstruct
-    fun init() {
-        if (prefixUrl.isBlank()) {
-            throw SuperControllerException("super-controller.prefix-url cannot be empty")
-        }
-        if (basePackage.isBlank()) {
-            throw SuperControllerException("super-controller.base-package cannot be empty")
-        }
-
-        path.verify()
-        classSuffix.verify()
-    }
+@Validated
+class ConfigProperties {
+    @field:NotNull
+    @field:Valid
+    val path = Path()
+    @field:NotNull
+    @field:NotBlank
+    var prefixUrl = ""
+    @field:PathConstraint
+    var basePackage = ""
+    @field:NotNull
+    @field:Valid
+    val classSuffix = ClassSuffix()
+    @field:NotNull
+    @field:Valid
+    val controllerAdvice = ControllerAdvice()
 }
 
 class Path {
+    @field:PathConstraint
     var requests: String = ""
-    var responses: String = ""
+    @field:PathConstraint
     var policies: String = ""
+    @field:PathConstraint
     var services: String = ""
-
-    fun verify() {
-        if (requests.isBlank())
-            throw SuperControllerException("super-controller.path.requests cannot be empty")
-        if (responses.isBlank())
-            throw SuperControllerException("super-controller.path.responses cannot be empty")
-        if (policies.isBlank())
-            throw SuperControllerException("super-controller.path.policies cannot be empty")
-        if (services.isBlank())
-            throw SuperControllerException("super-controller.path.services cannot be empty")
-    }
 }
 
 class ClassSuffix {
+    @field:PascalCase
     var request: String = ""
-    var response: String = ""
+    @field:PascalCase
     var policy: String = ""
+    @field:PascalCase
     var service: String = ""
-
-    fun verify() {
-        if (request.isBlank())
-            throw SuperControllerException("super-controller.class-suffix.request cannot be empty")
-        if (response.isBlank())
-            throw SuperControllerException("super-controller.class-suffix.response cannot be empty")
-        if (policy.isBlank())
-            throw SuperControllerException("super-controller.class-suffix.policy cannot be empty")
-        if (service.isBlank())
-            throw SuperControllerException("super-controller.class-suffix.service cannot be empty")
-    }
 }
 
 class ControllerAdvice {
+    @field:NotNull
     var enable: Boolean = false
 }

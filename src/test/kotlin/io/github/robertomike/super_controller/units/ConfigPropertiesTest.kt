@@ -1,58 +1,40 @@
 package io.github.robertomike.super_controller.units
 
-import io.github.robertomike.super_controller.config.ClassSuffix
 import io.github.robertomike.super_controller.config.ConfigProperties
-import io.github.robertomike.super_controller.config.Path
-import io.github.robertomike.super_controller.exceptions.SuperControllerException
+import jakarta.validation.Validator
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
-import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.junit.jupiter.MockitoExtension
+import org.junit.jupiter.api.TestMethodOrder
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
+import org.springframework.boot.test.context.SpringBootTest
+import kotlin.test.assertEquals
 
-@ExtendWith(MockitoExtension::class)
+@SpringBootTest
+@TestMethodOrder(MethodOrderer.OrderAnnotation::class)
+@AutoConfigureMockMvc
 class ConfigPropertiesTest {
+    @Autowired
+    private lateinit var validator: Validator
+
     @Test
     fun configProperties() {
         val configProperties = ConfigProperties()
 
-        assertThrows<SuperControllerException>(configProperties::init)
-        configProperties.prefixUrl = "/api/"
+        var violations = validator.validate(configProperties)
+        assertEquals(12, violations.size)
 
-        assertThrows<SuperControllerException>(configProperties::init)
-        configProperties.basePackage = "io.github.robertomike.super_controller"
-    }
+        configProperties.basePackage = "io"
+        configProperties.prefixUrl = "/api"
+        configProperties.path.policies = "policies"
+        configProperties.path.requests = "DTO.requests"
+        configProperties.path.services = "dto_requests"
+        configProperties.classSuffix.policy = "Policy"
+        configProperties.classSuffix.request = "RequestRandomSuffix"
+        configProperties.classSuffix.service = "Service"
 
-    @Test
-    fun verifyPath() {
-        val path = Path()
-
-        assertThrows<SuperControllerException>(path::verify)
-        path.requests = "requests"
-
-        assertThrows<SuperControllerException>(path::verify)
-        path.responses = "responses"
-
-        assertThrows<SuperControllerException>(path::verify)
-        path.policies = "policies"
-
-        assertThrows<SuperControllerException>(path::verify)
-        path.services = "services"
-    }
-
-    @Test
-    fun verifyClassSuffix() {
-        val classSuffix = ClassSuffix()
-
-        assertThrows<SuperControllerException>(classSuffix::verify)
-        classSuffix.request = "Request"
-
-        assertThrows<SuperControllerException>(classSuffix::verify)
-        classSuffix.response = "Response"
-
-        assertThrows<SuperControllerException>(classSuffix::verify)
-        classSuffix.policy = "Policy"
-
-        assertThrows<SuperControllerException>(classSuffix::verify)
-        classSuffix.service = "Service"
+        violations = validator.validate(configProperties)
+        assertTrue(violations.isEmpty())
     }
 }

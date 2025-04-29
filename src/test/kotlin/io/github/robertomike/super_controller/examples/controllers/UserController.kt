@@ -1,34 +1,16 @@
 package io.github.robertomike.super_controller.examples.controllers
 
 import io.github.robertomike.super_controller.controllers.SuperController
+import io.github.robertomike.super_controller.examples.mappers.UserResponseMapper
 import io.github.robertomike.super_controller.examples.models.User
-import io.github.robertomike.super_controller.examples.requests.UserRequest
-import io.github.robertomike.super_controller.examples.responses.UserResponse
-import io.github.robertomike.super_controller.requests.Request
-import io.github.robertomike.super_controller.responses.Response
-import org.springframework.web.bind.annotation.RequestMapping
+import io.github.robertomike.super_controller.examples.requests.StoreUserRequest
+import io.github.robertomike.super_controller.examples.services.UserService
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/assets")
-class UserController : SuperController<User, Long>() {
-    override fun setConfig() {
+class UserController(service: UserService, override val mapper: UserResponseMapper) :
+    SuperController<User, Long>(service) {
+    init {
         needAuthorization = false
-    }
-
-    override fun listResponse(): Class<out Response> {
-        return UserResponse::class.java
-    }
-
-    override fun detailResponse(): Class<out Response> {
-        return UserResponse::class.java
-    }
-
-    override fun storeRequest(): Class<out Request> {
-        return UserRequest::class.java
-    }
-
-    override fun updateRequest(): Class<out Request> {
-        return UserRequest::class.java
     }
 }
