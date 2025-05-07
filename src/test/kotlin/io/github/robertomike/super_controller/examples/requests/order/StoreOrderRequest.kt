@@ -3,9 +3,11 @@ package io.github.robertomike.super_controller.examples.requests.order
 import io.github.robertomike.super_controller.requests.Request
 import jakarta.validation.constraints.NotNull
 
-data class UpdateRequest(
+data class StoreOrderRequest(
     @field:NotNull
-    val name: String? = null,
+    var name: String? = null,
     @field:NotNull
-    val price: Double? = null
+    var userId: Long? = null,
+    @field:NotNull
+    var price: Double? = null
 ) : Request

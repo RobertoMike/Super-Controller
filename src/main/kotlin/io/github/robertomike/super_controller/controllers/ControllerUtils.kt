@@ -167,21 +167,21 @@ abstract class ControllerUtils : ClassUtils {
                 methodName + nameModel + properties.classSuffix.request,
                 Request::class.java
             )
-        } catch (e: Exception) {
+        } catch (_: Exception) {
         }
         try {
             return findClass(
                 StringUtils.uncapitalize(nameModel) + ".$methodName$nameModel${properties.classSuffix.request}",
                 Request::class.java
             )
-        } catch (e: Exception) {
+        } catch (_: Exception) {
         }
         try {
             return findClass(
                 nameModel + properties.classSuffix.request,
                 Request::class.java
             )
-        } catch (e: Exception) {
+        } catch (_: Exception) {
         }
 
         throw SuperControllerException("Cannot find the request class for $methodName method")
