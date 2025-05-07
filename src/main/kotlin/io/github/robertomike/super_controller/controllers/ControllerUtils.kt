@@ -3,11 +3,7 @@ package io.github.robertomike.super_controller.controllers
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.robertomike.super_controller.config.ConfigProperties
 import io.github.robertomike.super_controller.enums.Methods
-import io.github.robertomike.super_controller.enums.Methods.DESTROY
-import io.github.robertomike.super_controller.enums.Methods.INDEX
-import io.github.robertomike.super_controller.enums.Methods.SHOW
-import io.github.robertomike.super_controller.enums.Methods.STORE
-import io.github.robertomike.super_controller.enums.Methods.UPDATE
+import io.github.robertomike.super_controller.enums.Methods.*
 import io.github.robertomike.super_controller.exceptions.BasicException
 import io.github.robertomike.super_controller.exceptions.ServerException
 import io.github.robertomike.super_controller.exceptions.SuperControllerException
@@ -166,17 +162,29 @@ abstract class ControllerUtils : ClassUtils {
     }
 
     private fun findRequestClass(methodName: String): Class<Request> {
-        return try {
-            findClass(
+        try {
+            return findClass(
                 methodName + nameModel + properties.classSuffix.request,
                 Request::class.java
             )
         } catch (e: Exception) {
-            findClass(
+        }
+        try {
+            return findClass(
                 StringUtils.uncapitalize(nameModel) + ".$methodName$nameModel${properties.classSuffix.request}",
                 Request::class.java
             )
+        } catch (e: Exception) {
         }
+        try {
+            return findClass(
+                nameModel + properties.classSuffix.request,
+                Request::class.java
+            )
+        } catch (e: Exception) {
+        }
+
+        throw SuperControllerException("Cannot find the request class for $methodName method")
     }
 
     private fun saveRequestClass(method: Methods, requestClass: Class<Request>) {
