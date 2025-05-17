@@ -1,0 +1,53 @@
+package io.github.robertomike.super_controller.config.router
+
+import io.github.robertomike.super_controller.controllers.SuperController
+import io.github.robertomike.super_controller.exceptions.SuperControllerException
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
+import org.springframework.context.annotation.Configuration
+import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.reactive.result.method.RequestMappingInfo
+import org.springframework.web.reactive.result.method.annotation.RequestMappingHandlerMapping
+
+@Configuration
+@ConditionalOnClass(name = ["org.springframework.web.reactive.config.WebFluxConfigurer"])
+open class ReactiveRouterConfig(
+    val mapper: RequestMappingHandlerMapping,
+    controllers: List<SuperController<*,*,*,*>>
+) : BaseRouter<SuperController<*,*,*,*>>(controllers) {
+    /**
+     * The builder configuration for the request mapping handler.
+     */
+    private val builderConfiguration: RequestMappingInfo.BuilderConfiguration
+        get() {
+            val field = RequestMappingHandlerMapping::class.java.getDeclaredField("config")
+            field.isAccessible = true
+            return field.get(mapper) as RequestMappingInfo.BuilderConfiguration
+        }
+
+    /**
+     * Registers a URL mapping for a specific method in the current class.
+     *
+     * @param method The name of the method to be mapped. Must match the name of a method in the current class.
+     * @param url The URL pattern to be mapped to the specified method.
+     * @param httpMethod The HTTP method (e.g., GET, POST) for the mapping.
+     * @throws SuperControllerException if the method cannot be registered due to reflection issues or other errors.
+     */
+    override fun registerUrl(
+        controller: Any,
+        method: String,
+        url: String,
+        httpMethod: RequestMethod
+    ) {
+        try {
+            val requestMapping = RequestMappingInfo.paths(url)
+                .methods(httpMethod)
+                .options(builderConfiguration)
+                .build()
+            val controllerMethod = searchMethodFor(controller, method)
+
+            mapper.registerMapping(requestMapping, controller, controllerMethod)
+        } catch (e: Exception) {
+            throw SuperControllerException("Cannot register this method $method", e)
+        }
+    }
+}

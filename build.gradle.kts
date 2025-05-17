@@ -14,20 +14,20 @@ val pomGroupId = group
 val pomVersion = version
 val baseArtifactId = "super-controller"
 val jdkCompileVersion = 17
+val springVersion = "6.0.0"
 val springBootVersion = "3.0.0"
+val springRules = "2.0.8"
 val baradumApacheVersion = "2.0.2"
-val springRules = "2.0.5"
+val jakartaVersion = "3.0.0"
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion")
-    implementation("org.springframework.boot:spring-boot-starter-validation:$springBootVersion")
-    implementation("io.github.robertomike:baradum-apache-tomcat:$baradumApacheVersion")
-    implementation("io.github.robertomike:spring-rules:$springRules")
+    implementation("jakarta.validation:jakarta.validation-api:${jakartaVersion}")
+    implementation("org.springframework.data:spring-data-commons:$springBootVersion")
+
     implementation("org.atteo:evo-inflector:1.3")
     implementation("org.reflections:reflections:0.10.2")
     // MapStruct core library
@@ -37,18 +37,21 @@ dependencies {
     kapt("org.mapstruct:mapstruct-processor:1.6.3")
 
     api("org.mapstruct:mapstruct:1.6.3")
+    api("com.fasterxml.jackson.core:jackson-databind:2.19.0")
     api("org.atteo:evo-inflector:1.3")
     api("org.reflections:reflections:0.10.2")
-    api("org.springframework.boot:spring-boot-starter-validation:$springBootVersion")
-    api("io.github.robertomike:spring-rules:$springRules")
+    api("org.springframework:spring-web:${springVersion}")
+
+    api("io.github.robertomike:spring-rules:$springRules") {
+        exclude(group = "org.springframework", module = "spring-webmvc")
+        exclude(group = "org.springframework.boot", module = "spring-boot-starter-web")
+    }
 
     runtimeOnly("org.jetbrains.kotlin:kotlin-reflect:1.2.41")
 
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
     testImplementation(kotlin("test"))
-    testImplementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
-    testImplementation("mysql:mysql-connector-java:8.0.33")
 }
 
 
@@ -78,7 +81,8 @@ publishing {
 
             pom {
                 name = "Super controller"
-                description = "This is a class for creation of controllers with super powers. Will create 5 default methods for API CRUD."
+                description =
+                    "This is a class for creation of controllers with super powers. Will create 5 default methods for API CRUD."
                 url = "https://github.com/RobertoMike/SuperController"
                 inceptionYear = "2024"
 
