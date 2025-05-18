@@ -1,4 +1,4 @@
-package io.github.robertomike.super_controller.units
+package io.github.robertomike.super_controller.reactive.units
 
 import io.github.robertomike.super_controller.reactive.examples.mappers.OrderMapper
 import io.github.robertomike.super_controller.reactive.examples.models.Order

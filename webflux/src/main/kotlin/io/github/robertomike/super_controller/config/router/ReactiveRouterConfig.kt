@@ -24,6 +24,10 @@ open class ReactiveRouterConfig(
             return field.get(mapper) as RequestMappingInfo.BuilderConfiguration
         }
 
+    init {
+        registerAll()
+    }
+
     /**
      * Registers a URL mapping for a specific method in the current class.
      *

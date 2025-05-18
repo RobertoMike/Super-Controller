@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "io.github.robertomike"
-version = "1.0.4"
+version = "1.0.5"
 
 val pomGroupId = group
 val pomVersion = version
@@ -16,36 +16,21 @@ val baseArtifactId = "super-controller"
 val jdkCompileVersion = 17
 val springVersion = "6.0.0"
 val springBootVersion = "3.0.0"
-val springRules = "2.0.8"
-val baradumApacheVersion = "2.0.2"
-val jakartaVersion = "3.0.0"
+val springRules = "2.0.9"
+val mapStruct = "1.6.3"
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation("jakarta.validation:jakarta.validation-api:${jakartaVersion}")
-    implementation("org.springframework.data:spring-data-commons:$springBootVersion")
-
-    implementation("org.atteo:evo-inflector:1.3")
-    implementation("org.reflections:reflections:0.10.2")
-    // MapStruct core library
-    implementation("org.mapstruct:mapstruct:1.6.3")
-
-    // MapStruct annotation processor for code generation
-    kapt("org.mapstruct:mapstruct-processor:1.6.3")
-
-    api("org.mapstruct:mapstruct:1.6.3")
-    api("com.fasterxml.jackson.core:jackson-databind:2.19.0")
+    api("io.github.robertomike:spring-rules:${springRules}")
+    api("org.springframework.data:spring-data-commons:$springBootVersion")
+    api("org.springframework:spring-web:${springVersion}")
+    api("org.mapstruct:mapstruct:$mapStruct")
     api("org.atteo:evo-inflector:1.3")
     api("org.reflections:reflections:0.10.2")
-    api("org.springframework:spring-web:${springVersion}")
 
-    api("io.github.robertomike:spring-rules:$springRules") {
-        exclude(group = "org.springframework", module = "spring-webmvc")
-        exclude(group = "org.springframework.boot", module = "spring-boot-starter-web")
-    }
 
     runtimeOnly("org.jetbrains.kotlin:kotlin-reflect:1.2.41")
 

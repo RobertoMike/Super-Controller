@@ -1,11 +1,7 @@
 package io.github.robertomike.super_controller.controllers.advice
 
-import io.github.robertomike.springrules.advice.ConstraintViolationAdvice
-import io.github.robertomike.springrules.configs.SpringRulesConfig
-import io.github.robertomike.springrules.responses.Violations
 import io.github.robertomike.super_controller.exceptions.BasicException
 import io.github.robertomike.super_controller.responses.errors.BasicErrorResponse
-import jakarta.validation.ConstraintViolation
 import jakarta.validation.ValidationException
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Configuration
@@ -15,7 +11,6 @@ import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.bind.annotation.ResponseStatus
-import org.springframework.web.bind.support.WebExchangeBindException
 
 /**
  * Controller advice for handling exceptions and providing a standardized error response.
@@ -25,8 +20,7 @@ import org.springframework.web.bind.support.WebExchangeBindException
 @Configuration
 @ControllerAdvice
 @ConditionalOnProperty("super-controller.controller-advice.enable")
-open class ErrorHandlingControllerAdvice(val config: SpringRulesConfig) {
-    val violationAdvice = ConstraintViolationAdvice(config)
+open class ErrorHandlingControllerAdvice {
 
     /**
      * Handles [BasicException] by converting it into a [BasicErrorResponse] and returning it as a [ResponseEntity].
@@ -41,20 +35,6 @@ open class ErrorHandlingControllerAdvice(val config: SpringRulesConfig) {
         val error = BasicErrorResponse(e.message ?: "")
 
         return ResponseEntity(error, e.status)
-    }
-
-    @ExceptionHandler(WebExchangeBindException::class)
-    @ResponseStatus
-    @ResponseBody
-    fun webExchangeBindException(e: WebExchangeBindException): ResponseEntity<Violations> {
-        val constraints = e.bindingResult.allErrors.map { it.unwrap(ConstraintViolation::class.java) }
-        val errors = Violations().apply {
-            constraints.forEach {
-                addError(violationAdvice.getPropertyPath(it.propertyPath), it.message, config.violationBody)
-            }
-        }
-
-        return ResponseEntity(errors, HttpStatus.BAD_REQUEST)
     }
 
     /**

@@ -19,6 +19,10 @@ open class RouterConfig(
      */
     private val builderConfiguration = mapper.builderConfiguration
 
+    init {
+        registerAll()
+    }
+
     /**
      * Registers a URL mapping for a specific method in the current class.
      *

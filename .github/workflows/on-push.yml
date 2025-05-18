@@ -40,4 +40,4 @@ jobs:
         continue-on-error: true
 
       - name: Test with Gradle
-        run: gradle :test
+        run: gradle :test :mvc:test :webflux:test

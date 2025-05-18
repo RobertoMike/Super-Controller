@@ -1,4 +1,4 @@
-package io.github.robertomike.super_controller.reactive.units
+package io.github.robertomike.super_controller.units
 
 import io.github.robertomike.super_controller.config.ConfigProperties
 import jakarta.validation.Validator

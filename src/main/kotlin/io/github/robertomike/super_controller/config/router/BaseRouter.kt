@@ -2,15 +2,13 @@ package io.github.robertomike.super_controller.config.router
 
 import io.github.robertomike.super_controller.controllers.CrudController
 import io.github.robertomike.super_controller.enums.Methods
-import jakarta.annotation.PostConstruct
 import org.springframework.web.bind.annotation.RequestMethod
 import java.lang.reflect.Method
 
 abstract class BaseRouter<out C : CrudController<*, *, *, *, *, *>>(
     val controllers: List<C>
 ) {
-    @PostConstruct
-    fun init() {
+    fun registerAll() {
         controllers.forEach {
             registerCrud(it, it.baseUrl, it.urls)
         }

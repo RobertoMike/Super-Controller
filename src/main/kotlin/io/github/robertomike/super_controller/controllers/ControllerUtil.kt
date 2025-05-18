@@ -1,6 +1,5 @@
 package io.github.robertomike.super_controller.controllers
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.robertomike.springrules.utils.getBeanByClassOrName
 import io.github.robertomike.super_controller.config.ConfigProperties
 import io.github.robertomike.super_controller.enums.Methods
@@ -14,7 +13,6 @@ import io.github.robertomike.super_controller.responses.Response
 import io.github.robertomike.super_controller.services.interfaces.BasicService
 import io.github.robertomike.super_controller.utils.ClassUtils
 import io.github.robertomike.super_controller.utils.GenericUtil
-import jakarta.validation.Validator
 import org.atteo.evo.inflector.English
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
@@ -33,18 +31,6 @@ abstract class ControllerUtil<M, ID, PR> : ClassUtils, GenericUtil {
      */
     @Autowired
     lateinit var properties: ConfigProperties
-
-    /**
-     * Sets the object mapper for JSON serialization and deserialization.
-     */
-    @Autowired
-    lateinit var objectMapper: ObjectMapper
-
-    /**
-     * Sets the validator for request validation.
-     */
-    @Autowired
-    lateinit var validator: Validator
 
     /**
      * The mapper used for to map requests and responses for business logic.
@@ -184,7 +170,6 @@ abstract class ControllerUtil<M, ID, PR> : ClassUtils, GenericUtil {
      */
     fun <O> findClass(fileName: String, clazz: Class<O>): Class<O> {
         val packageClass = when (clazz) {
-            Request::class.java -> properties.path.requests
             BasePolicy::class.java -> properties.path.policies
             BasicService::class.java -> properties.path.services
             else -> throw SuperControllerException("Class not supported")
