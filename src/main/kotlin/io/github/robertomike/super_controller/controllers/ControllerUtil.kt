@@ -25,7 +25,7 @@ import java.util.*
  * other utility functions for controllers.
  *
  */
-abstract class ControllerUtil<M, ID, PR> : ClassUtils, GenericUtil {
+abstract class ControllerUtil<M, PR> : ClassUtils, GenericUtil {
     /**
      * Sets the configuration properties for this controller.
      */
@@ -61,7 +61,7 @@ abstract class ControllerUtil<M, ID, PR> : ClassUtils, GenericUtil {
     /**
      * The policy used for authorization.
      */
-    var policy: BasePolicy<ID, Request, Request, PR>? = null
+    var policy: BasePolicy<M, Request, Request, PR>? = null
 
     /**
      * Returns a list of HTTP methods that are only allowed for this controller.
@@ -133,18 +133,18 @@ abstract class ControllerUtil<M, ID, PR> : ClassUtils, GenericUtil {
      * Executes the policy for the given method and ID.
      *
      * @param method The method to execute (e.g. Methods.INDEX, Methods.STORE, etc.)
-     * @param id The ID of the model (optional)
+     * @param model The ID of the model (optional)
      * @param request The request data (optional)
      */
-    fun executePolicy(method: Methods, id: ID? = null, request: Request? = null): PR {
+    fun executePolicy(method: Methods, model: M? = null, request: Request? = null): PR {
         if (!needAuthorization) {
             return noPolicy()
         }
 
         val policy = policy ?: throw SuperControllerException("Policy not found")
 
-        if (method in listOf(SHOW, UPDATE, DESTROY) && id == null) {
-            throw SuperControllerException("Id cannot be null")
+        if (method in listOf(SHOW, UPDATE, DESTROY) && model == null) {
+            throw SuperControllerException("The model cannot be null")
         }
         if (method in listOf(STORE, UPDATE) && request == null) {
             throw SuperControllerException("Request cannot be null")
@@ -153,9 +153,9 @@ abstract class ControllerUtil<M, ID, PR> : ClassUtils, GenericUtil {
         return when (method) {
             INDEX -> policy.viewAll()
             STORE -> policy.store(request!!)
-            SHOW -> policy.view(id!!)
-            UPDATE -> policy.update(id!!, request!!)
-            DESTROY -> policy.destroy(id!!)
+            SHOW -> policy.view(model!!)
+            UPDATE -> policy.update(model!!, request!!)
+            DESTROY -> policy.destroy(model!!)
         }
     }
 

@@ -2,7 +2,7 @@ package io.github.robertomike.super_controller.services.interfaces
 
 import io.github.robertomike.super_controller.requests.Request
 
-interface AfterAndBeforeActions<M, PAGE, ID, SR : Request, UR : Request, R> {
+interface AfterAndBeforeActions<M, PAGE, SR : Request, UR : Request, R> {
     /**
      * Called after the index operation. This method can be overridden by subclasses to perform custom logic.
      *
@@ -29,15 +29,6 @@ interface AfterAndBeforeActions<M, PAGE, ID, SR : Request, UR : Request, R> {
      * @param request The request.
      */
     fun afterStore(model: M, request: SR): R {
-        return defaultAction()
-    }
-
-    /**
-     * Called before the show operation. This method can be overridden by subclasses to perform custom logic.
-     *
-     * @param id The ID of the model being shown.
-     */
-    fun beforeShow(id: ID): R {
         return defaultAction()
     }
 
@@ -75,7 +66,7 @@ interface AfterAndBeforeActions<M, PAGE, ID, SR : Request, UR : Request, R> {
      *
      * @param id The ID of the model being deleted.
      */
-    fun beforeDelete(id: ID): R {
+    fun beforeDelete(model: M): R {
         return defaultAction()
     }
 

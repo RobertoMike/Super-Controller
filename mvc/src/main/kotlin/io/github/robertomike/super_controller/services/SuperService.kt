@@ -2,16 +2,16 @@ package io.github.robertomike.super_controller.services
 
 import io.github.robertomike.super_controller.exceptions.NotFoundException
 import io.github.robertomike.super_controller.exceptions.SuperControllerException
+import io.github.robertomike.super_controller.repositories.RepositorySupport
 import io.github.robertomike.super_controller.requests.Request
 import io.github.robertomike.super_controller.services.interfaces.AfterAndBeforeActions
 import io.github.robertomike.super_controller.services.interfaces.BasicService
 import io.github.robertomike.super_controller.services.interfaces.MappingActions
 import io.github.robertomike.super_controller.utils.ClassUtils
 import jakarta.annotation.PostConstruct
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
-import org.springframework.data.repository.CrudRepository
-import org.springframework.data.repository.PagingAndSortingRepository
 import org.springframework.data.repository.Repository
 import org.springframework.transaction.annotation.Transactional
 
@@ -22,8 +22,12 @@ import org.springframework.transaction.annotation.Transactional
  * @param ID The type of the ID of the model being managed by this service.
  */
 abstract class SuperService<M, ID, SR : Request, UR : Request> : ClassUtils,
-    AfterAndBeforeActions<M, Page<M>, ID, SR, UR, Unit>, BasicService<M, Page<M>, ID, SR, UR, Unit>,
+    AfterAndBeforeActions<M, Page<M>, SR, UR, Unit>, BasicService<M, Page<M>, ID, SR, UR, Unit>,
     MappingActions<M, SR, UR> {
+
+    @Autowired
+    lateinit var repositorySupport: RepositorySupport
+
     /**
      * Initializes the service by calling the [config] method.
      */
@@ -44,9 +48,8 @@ abstract class SuperService<M, ID, SR : Request, UR : Request> : ClassUtils,
      * @param page The page request.
      * @return A page of models.
      */
-    override fun index(page: PageRequest): Page<M> {
-        val models = repositoryExtendsPagination()
-            .findAll(page)
+    override fun index(page: PageRequest, params: Map<String, String>): Page<M> {
+        val models = repositorySupport.findAll(page, repository)
 
         afterIndex(models)
 
@@ -65,7 +68,7 @@ abstract class SuperService<M, ID, SR : Request, UR : Request> : ClassUtils,
 
         beforeStore(model, request)
 
-        save(model)
+        repositorySupport.persist(model, repository)
 
         afterStore(model, request)
 
@@ -75,14 +78,10 @@ abstract class SuperService<M, ID, SR : Request, UR : Request> : ClassUtils,
     /**
      * Returns a model based on the provided ID.
      *
-     * @param id The ID of the model.
+     * @param model The model.
      * @return The model.
      */
-    override fun show(id: ID): M {
-        beforeShow(id)
-
-        val model = findById(id)
-
+    override fun show(model: M): M {
         afterShow(model)
 
         return model
@@ -91,19 +90,17 @@ abstract class SuperService<M, ID, SR : Request, UR : Request> : ClassUtils,
     /**
      * Updates a model based on the provided request.
      *
-     * @param id The ID of the model being updated.
+     * @param model The model being updated.
      * @param request The request.
      * @return The updated model.
      */
     @Transactional
-    override fun update(id: ID, request: UR): M {
-        val model = findById(id)
-
+    override fun update(model: M, request: UR): M {
         beforeUpdate(model, request)
 
         mappingUpdate(request, model)
 
-        save(model)
+        repositorySupport.update(model, repository)
 
         afterUpdate(model, request)
 
@@ -113,67 +110,15 @@ abstract class SuperService<M, ID, SR : Request, UR : Request> : ClassUtils,
     /**
      * Deletes a model based on the provided ID.
      *
-     * @param id The ID of the model being deleted.
+     * @param model The model being deleted.
      */
     @Transactional
-    override fun delete(id: ID) {
-        beforeDelete(id)
+    override fun delete(model: M) {
+        beforeDelete(model)
 
-        val model = findById(id)
-
-        deleteByModel(model)
+        repositorySupport.delete(model, repository)
 
         afterDelete(model)
-    }
-
-    /**
-     * Saves a model to the repository.
-     *
-     * @param model The model to save.
-     */
-    open fun save(model: M) {
-        repositoryExtendsCrudRepository()
-            .save(model)
-    }
-
-    /**
-     * Deletes a model from the repository.
-     *
-     * @param model The model to delete.
-     */
-    open fun deleteByModel(model: M) {
-        repositoryExtendsCrudRepository()
-            .delete(model)
-    }
-
-    /**
-     * Returns the repository instance, cast to [CrudRepository].
-     *
-     * @throws SuperControllerException if the repository does not extend from [CrudRepository]
-     */
-    private fun repositoryExtendsCrudRepository(): CrudRepository<M, ID> {
-        if (repository !is CrudRepository<M, ID>) {
-            throw SuperControllerException(
-                "The repository doesn't extend from CrudRepository"
-            )
-        }
-
-        return repository as CrudRepository<M, ID>
-    }
-
-    /**
-     * Returns the repository instance, cast to [PagingAndSortingRepository].
-     *
-     * @throws SuperControllerException if the repository does not extend from [PagingAndSortingRepository]
-     */
-    private fun repositoryExtendsPagination(): PagingAndSortingRepository<M, ID> {
-        if (repository !is PagingAndSortingRepository<M, ID>) {
-            throw SuperControllerException(
-                "The repository doesn't extend from PagingAndSortingRepository"
-            )
-        }
-
-        return repository as PagingAndSortingRepository<M, ID>
     }
 
     /**
@@ -185,12 +130,7 @@ abstract class SuperService<M, ID, SR : Request, UR : Request> : ClassUtils,
     override fun findById(id: ID): M {
         val repository = repository
 
-        val model = when {
-            repository is CrudRepository<M, ID> -> repository.findById(id)
-            else -> throw SuperControllerException(
-                "The repository doesn't extend from CrudRepository and customFindById is not active"
-            )
-        }
+        val model = repositorySupport.findById(id, repository)
 
         return model.orElseThrow {
             NotFoundException(

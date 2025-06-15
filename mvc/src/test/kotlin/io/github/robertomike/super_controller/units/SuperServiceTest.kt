@@ -34,28 +34,4 @@ class SuperServiceTest {
         mapper = mock(OrderMapper::class.java)
         service = OrderService(orderRepository, userRepository, mapper)
     }
-
-
-    @Test
-    fun searchModel_modelNotFound() {
-        val temporal = object : SuperService<Order, Long, Request, Request>() {
-            override val repository: Repository<Order, Long>
-                get() = orderRepository
-        }
-
-        `when`(orderRepository.findById(any())).thenReturn(Optional.empty())
-
-        assertThrows<NotFoundException> {
-            temporal.show(1L)
-        }
-    }
-
-    @Test
-    fun repositoryNotImplemented() {
-        val temporal = object : SuperService<Order, Long, Request, Request>() {}
-
-        assertThrows<SuperControllerException> {
-            temporal.show(1L)
-        }
-    }
 }

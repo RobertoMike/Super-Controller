@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.ResponseStatus
  */
 abstract class SuperController<M, ID : Any, SR : Request, UR : Request>() :
     CrudController<ID, Any, SR, UR, Page<*>, Unit>,
-    ControllerUtil<M, ID, Boolean>() {
+    ControllerUtil<M, Boolean>() {
     /**
      * The service used for business logic.
      */
@@ -39,7 +39,7 @@ abstract class SuperController<M, ID : Any, SR : Request, UR : Request>() :
     constructor(
         service: BasicService<M, Page<M>, ID, Request, Request, Unit>,
         needAuthorization: Boolean = true,
-        policy: Policy<ID, Request, Request>? = null,
+        policy: Policy<M, Request, Request>? = null,
         basePackage: String? = null
     ) : this() {
         this.needAuthorization = needAuthorization
@@ -83,11 +83,12 @@ abstract class SuperController<M, ID : Any, SR : Request, UR : Request>() :
      */
     override fun index(
         @RequestParam(value = "page", defaultValue = "0") page: Int,
-        @RequestParam(value = "size", defaultValue = "10") size: Int
+        @RequestParam(value = "size", defaultValue = "10") size: Int,
+        @RequestParam params: Map<String, String>
     ): Page<*> {
         executePolicy(INDEX).policyIsValid()
         return transform(
-            service.index(PageRequest.of(page, size))
+            service.index(PageRequest.of(page, size), params)
         )
     }
 
@@ -111,8 +112,11 @@ abstract class SuperController<M, ID : Any, SR : Request, UR : Request>() :
      * @return The model
      */
     override fun show(@PathVariable id: ID): Any {
-        executePolicy(SHOW, id).policyIsValid()
-        return transform(service.show(id))
+        val model = service.findById(id)
+
+        executePolicy(SHOW, model).policyIsValid()
+
+        return transform(service.show(model))
     }
 
     /**
@@ -122,9 +126,12 @@ abstract class SuperController<M, ID : Any, SR : Request, UR : Request>() :
      * @param request The JSON data for the updated model
      */
     override fun update(@PathVariable id: ID, @Valid @RequestBody request: UR): Any {
-        executePolicy(UPDATE, id, request).policyIsValid()
+        val model = service.findById(id)
+
+        executePolicy(UPDATE, model, request).policyIsValid()
+
         return transform(
-            service.update(id, request)
+            service.update(model, request)
         )
     }
 
@@ -134,8 +141,11 @@ abstract class SuperController<M, ID : Any, SR : Request, UR : Request>() :
      * @param id The ID of the model to delete
      */
     override fun destroy(@PathVariable id: ID) {
-        executePolicy(DESTROY, id).policyIsValid()
-        service.delete(id)
+        val model = service.findById(id)
+
+        executePolicy(DESTROY, model).policyIsValid()
+
+        service.delete(model)
     }
 
     /**

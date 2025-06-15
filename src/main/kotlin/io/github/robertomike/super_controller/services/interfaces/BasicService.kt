@@ -22,7 +22,7 @@ interface BasicService<M, PAGE, ID, out SR : Request, out UR : Request, DELETE> 
      * @param page The page request containing the pagination information.
      * @return A page of data.
      */
-    fun index(page: PageRequest): PAGE
+    fun index(page: PageRequest, params: Map<String, String>): PAGE
 
     /**
      * Creates a new piece of data.
@@ -39,30 +39,30 @@ interface BasicService<M, PAGE, ID, out SR : Request, out UR : Request, DELETE> 
      *
      * This method returns a piece of data based on its identifier.
      *
-     * @param id The identifier of the data to be retrieved.
+     * @param model The identifier of the data to be retrieved.
      * @return The retrieved data.
      */
-    fun show(id: ID): M
+    fun show(model: M): M
 
     /**
      * Updates a piece of data.
      *
      * This method updates a piece of data based on the provided request and identifier.
      *
-     * @param id The identifier of the data to be updated.
+     * @param model The identifier of the data to be updated.
      * @param request The request containing the updated data.
      * @return The updated data.
      */
-    fun update(id: ID, request: @UnsafeVariance UR): M
+    fun update(model: M, request: @UnsafeVariance UR): M
 
     /**
      * Deletes a piece of data.
      *
      * This method deletes a piece of data based on its identifier.
      *
-     * @param id The identifier of the data to be deleted.
+     * @param model The identifier of the data to be deleted.
      */
-    fun delete(id: ID): DELETE
+    fun delete(model: M): DELETE
 
 
     fun findById(id: ID): M

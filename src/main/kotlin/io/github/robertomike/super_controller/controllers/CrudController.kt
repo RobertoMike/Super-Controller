@@ -33,7 +33,8 @@ interface CrudController<ID, RETURN, SR, UR, PAGE, DELETE> {
      */
     fun index(
         @RequestParam(value = "page", defaultValue = "0") page: Int,
-        @RequestParam(value = "size", defaultValue = "10") size: Int
+        @RequestParam(value = "size", defaultValue = "10") size: Int,
+        @RequestParam params: Map<String, String>
     ): PAGE
 
     /**

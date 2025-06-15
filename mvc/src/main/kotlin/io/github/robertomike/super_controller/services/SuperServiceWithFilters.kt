@@ -51,7 +51,7 @@ abstract class SuperServiceWithFilters<M : BaseModel, ID, SR: Request, UR: Reque
     open fun beforeIndex(queryBuilder: Baradum<M>) {
     }
 
-    override fun index(page: PageRequest): Page<M> {
+    override fun index(page: PageRequest, params: Map<String, String>): Page<M> {
         val queryBuilder = Baradum.make(model)
             .allowedFilters(filters())
             .builder { it.with(*with().toTypedArray()) }

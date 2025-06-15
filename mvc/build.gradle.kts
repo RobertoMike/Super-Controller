@@ -23,10 +23,11 @@ val jdkCompileVersion = 17
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}")
     implementation("io.github.robertomike:baradum:${baradumApacheVersion}")
-    implementation(project(":"))
+    implementation("io.hypersistence:hypersistence-utils-hibernate-62:3.8.1")
     // MapStruct core library
     implementation("org.mapstruct:mapstruct:1.6.3")
 
+    api(project(":"))
     api("org.springframework.boot:spring-boot-starter-web:${springBootVersion}")
 
     // MapStruct annotation processor for code generation

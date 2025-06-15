@@ -1,12 +1,13 @@
 package io.github.robertomike.super_controller.examples.policies
 
+import io.github.robertomike.super_controller.examples.models.Order
 import io.github.robertomike.super_controller.examples.requests.order.StoreOrderRequest
 import io.github.robertomike.super_controller.examples.requests.order.UpdateOrderRequest
 import io.github.robertomike.super_controller.policies.Policy
 import org.springframework.stereotype.Component
 
 @Component
-class OrderPolicy : Policy<Long, StoreOrderRequest, UpdateOrderRequest>() {
+class OrderPolicy : Policy<Order, StoreOrderRequest, UpdateOrderRequest>() {
     override fun viewAll(): Boolean {
         return true
     }
@@ -15,15 +16,15 @@ class OrderPolicy : Policy<Long, StoreOrderRequest, UpdateOrderRequest>() {
         return "admin" == request.name
     }
 
-    override fun view(id: Long): Boolean {
-        return id > 1
+    override fun view(model: Order): Boolean {
+        return model.id!! > 1
     }
 
-    override fun update(id: Long, request: UpdateOrderRequest): Boolean {
-        return "admin" == request.name && id > 1
+    override fun update(model: Order, request: UpdateOrderRequest): Boolean {
+        return "admin" == request.name && model.id!! > 1
     }
 
-    override fun destroy(id: Long): Boolean {
-        return id > 1
+    override fun destroy(model: Order): Boolean {
+        return model.id!! > 1
     }
 }

@@ -15,7 +15,7 @@ import io.github.robertomike.super_controller.requests.Request
  *
  * @param <ID> the type of the resource identifier.
  */
-abstract class BasePolicy<ID, out SR: Request, out UR: Request, out R> {
+abstract class BasePolicy<Model, out SR: Request, out UR: Request, out R> {
     /**
      * Determines whether the current user can view all resources.
      *
@@ -34,25 +34,22 @@ abstract class BasePolicy<ID, out SR: Request, out UR: Request, out R> {
     /**
      * Determines whether the current user can view a specific resource.
      *
-     * @param id the identifier of the resource to view.
      * @return true if the user can view the resource, false otherwise.
      */
-    abstract fun view(id: ID): R
+    abstract fun view(model: Model): R
 
     /**
      * Determines whether the current user can update a specific resource.
      *
-     * @param id the identifier of the resource to update.
      * @param request the request containing the updated resource data.
      * @return true if the user can update the resource, false otherwise.
      */
-    abstract fun update(id: ID, request: @UnsafeVariance UR): R
+    abstract fun update(model: Model, request: @UnsafeVariance UR): R
 
     /**
      * Determines whether the current user can destroy a specific resource.
      *
-     * @param id the identifier of the resource to destroy.
      * @return true if the user can destroy the resource, false otherwise.
      */
-    abstract fun destroy(id: ID): R
+    abstract fun destroy(model: Model): R
 }
