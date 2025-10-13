@@ -2,6 +2,7 @@ package io.github.robertomike.super_controller.config.router
 
 import io.github.robertomike.super_controller.controllers.SuperController
 import io.github.robertomike.super_controller.exceptions.SuperControllerException
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.bind.annotation.RequestMethod
@@ -11,6 +12,7 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 @Configuration
 @ConditionalOnClass(name = ["org.springframework.web.servlet.config.annotation.WebMvcConfigurer"])
 open class RouterConfig(
+    @Qualifier("requestMappingHandlerMapping")
     val mapper: RequestMappingHandlerMapping,
     controllers: List<SuperController<*, *, *, *>>
 ) : BaseRouter<SuperController<*, *, *, *>>(controllers) {

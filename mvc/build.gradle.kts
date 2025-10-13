@@ -11,7 +11,7 @@ repositories {
 }
 
 group = "io.github.robertomike"
-version = "1.0.0"
+version = "1.0.1"
 
 val pomGroupId = group
 val pomVersion = version

@@ -1,16 +1,14 @@
 package io.github.robertomike.super_controller.repositories
 
 import io.github.robertomike.super_controller.exceptions.SuperControllerException
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.repository.CrudRepository
 import org.springframework.data.repository.PagingAndSortingRepository
 import org.springframework.data.repository.Repository
-import org.springframework.stereotype.Component
-import java.util.Optional
+import java.util.*
 
-class RepositoryNormalSupport: RepositorySupport {
+class RepositoryNormalSupport : RepositorySupport {
     override fun supportIt(repository: Repository<Any, Any>): Boolean {
         return repository is CrudRepository && repository is PagingAndSortingRepository<*, *>
     }
@@ -35,7 +33,7 @@ class RepositoryNormalSupport: RepositorySupport {
         repository: Repository<M, I>
     ): Optional<M> {
         return repository.extendsCrudRepository()
-           .findById(id)
+            .findById(id)
     }
 
     /**
