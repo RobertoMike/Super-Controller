@@ -1,6 +1,6 @@
 plugins {
-    kotlin("jvm")
-    kotlin("kapt") version "2.0.21"  // Kotlin Annotation Processing Tool
+    kotlin("jvm") version "2.1.0"
+    kotlin("kapt") version "2.1.0"  // Kotlin Annotation Processing Tool
     id("java-library")
     `maven-publish`
     id("signing")

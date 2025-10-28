@@ -19,9 +19,8 @@ import org.springframework.web.bind.support.WebExchangeBindException
  *
  * This class provides a centralized way to handle exceptions thrown by controllers and return a standardized error response.
  */
-@Configuration
 @ControllerAdvice
-@ConditionalOnProperty("super-controller.controller-advice.enable")
+@ConditionalOnProperty("super-controller.controller-advice.enable", matchIfMissing = true)
 open class WebExchangeValidationAdvice(val config: SpringRulesConfig) {
     val violationAdvice = ConstraintViolationAdvice(config)
 
