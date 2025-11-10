@@ -3,8 +3,7 @@ plugins {
 
     kotlin("kapt") version "2.0.21"  // Kotlin Annotation Processing Tool
     id("java-library")
-    `maven-publish`
-    id("signing")
+    id("com.vanniktech.maven.publish") version "0.29.0"
 }
 
 group = "io.github.robertomike"
@@ -67,73 +66,54 @@ kotlin {
     jvmToolchain(17)
 }
 
-publishing {
-    publications {
-        register("library", MavenPublication::class) {
-            from(components["java"])
 
-            groupId = "$pomGroupId"
-            artifactId = baseArtifactId
-            version = "$pomVersion"
-
-            pom {
-                name = "Super controller"
-                description = "This is a class for creation of controllers with super powers. Will create 5 default methods for API CRUD."
-                url = "https://github.com/RobertoMike/SuperController"
-                inceptionYear = "2024"
-
-                licenses {
-                    license {
-                        name = "MIT License"
-                        url = "http://www.opensource.org/licenses/mit-license.php"
-                    }
-                }
-                developers {
-                    developer {
-                        name = "Roberto Micheletti"
-                        email = "rmworking@hotmail.com"
-                        organization = "Roberto Micheletti"
-                        organizationUrl = "https://github.com/RobertoMike"
-                    }
-                }
-                scm {
-                    connection = "scm:git:git://github.com/RobertoMike/SuperController.git"
-                    developerConnection = "scm:git:ssh://github.com:RobertoMike/SuperController.git"
-                    url = "https://github.com/RobertoMike/SuperController"
-                }
+mavenPublishing {
+    publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL, automaticRelease = true)
+    
+    // Only sign if credentials are available (CI environment)
+    if (project.hasProperty("signing.keyId")) {
+        signAllPublications()
+    }
+    
+    coordinates(
+        groupId = group.toString(),
+        artifactId = baseArtifactId,
+        version = version.toString()
+    )
+    
+    pom {
+        name.set("Super controller")
+        description.set("This is a class for creation of controllers with super powers. Will create 5 default methods for API CRUD.")
+        url.set("https://github.com/RobertoMike/SuperController")
+        inceptionYear.set("2024")
+        
+        licenses {
+            license {
+                name.set("MIT License")
+                url.set("http://www.opensource.org/licenses/mit-license.php")
             }
         }
-    }
-    repositories {
-        maven {
-
-            name = "OSSRH"
-            url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-            credentials {
-                username = System.getenv("OSSRH_USERNAME")
-                password = System.getenv("OSSRH_PASSWORD")
+        
+        developers {
+            developer {
+                id.set("robertomike")
+                name.set("Roberto Micheletti")
+                email.set("rmworking@hotmail.com")
+                url.set("https://github.com/RobertoMike")
             }
-            metadataSources {
-                gradleMetadata()
-            }
+        }
+        
+        scm {
+            connection.set("scm:git:git://github.com/RobertoMike/SuperController.git")
+            developerConnection.set("scm:git:ssh://git@github.com/RobertoMike/SuperController.git")
+            url.set("https://github.com/RobertoMike/SuperController")
         }
     }
 }
 
-java {
-    withJavadocJar()
-    withSourcesJar()
-}
 
 tasks.withType(JavaCompile::class).configureEach {
     options.encoding = "UTF-8"
-}
-
-if (!project.hasProperty("local")) {
-    signing {
-        setRequired { !version.toString().endsWith("SNAPSHOT") }
-        sign(publishing.publications["library"])
-    }
 }
 
 tasks.register("printVersion") {
@@ -143,8 +123,6 @@ tasks.register("printVersion") {
 }
 
 java {
-    withJavadocJar()
-    withSourcesJar()
     toolchain {
         languageVersion.set(JavaLanguageVersion.of("$jdkCompileVersion"))
     }
