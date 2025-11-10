@@ -32,12 +32,12 @@ jobs:
 
       - name: Install secret key and Create file secring.gpg
         run: |
-          cat <(echo -e "${{ secrets.OSSRH_GPG_SECRET_KEY }}") | gpg --batch --import
+          cat <(echo -e "${{ secrets.GPG_PRIVATE_KEY }}") | gpg --batch --import
           gpg --list-secret-keys --keyid-format SHORT
           chmod -R 777 ~/.gnupg
           
           export GPG_TTY=$(tty) 
-          gpg --batch --export-secret-keys --pinentry-mode=loopback --passphrase ${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }} -o ~/.gnupg/secring.gpg
+          gpg --batch --export-secret-keys --pinentry-mode=loopback --passphrase ${{ secrets.GPG_SECRET_KEY_PASSWORD }} -o ~/.gnupg/secring.gpg
           ls -lh ~/.gnupg/secring.gpg
 
       - name: Build project
@@ -48,7 +48,7 @@ jobs:
           export GPG_TTY=$(tty)
           ./gradlew publishAllPublicationsToMavenCentralRepository \
             -Psigning.keyId=${{ secrets.GPG_SHORT_KEY }} \
-            -Psigning.password=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }} \
+            -Psigning.password=${{ secrets.GPG_SECRET_KEY_PASSWORD }} \
             -Psigning.secretKeyRingFile=$HOME/.gnupg/secring.gpg \
             --no-daemon
         env:
