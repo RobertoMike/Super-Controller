@@ -27,9 +27,11 @@ dependencies {
     api("io.github.robertomike:spring-rules:${springRules}")
     api("org.springframework.data:spring-data-commons:$springBootVersion")
     api("org.springframework:spring-web:${springVersion}")
+    api("org.springframework:spring-tx:${springVersion}")
     api("org.mapstruct:mapstruct:$mapStruct")
     api("org.atteo:evo-inflector:1.3")
     api("org.reflections:reflections:0.10.2")
+    api("com.fasterxml.jackson.module:jackson-module-kotlin:2.20.1")
 
 
     runtimeOnly("org.jetbrains.kotlin:kotlin-reflect:1.2.41")

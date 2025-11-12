@@ -8,7 +8,7 @@ import io.github.robertomike.super_controller.examples.requests.order.UpdateOrde
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class OrderController(policy: OrderPolicy) : SuperController<Order, Long, StoreOrderRequest, UpdateOrderRequest>() {
+open class OrderController(policy: OrderPolicy) : SuperController<Order, Long, StoreOrderRequest, UpdateOrderRequest>() {
     init {
         this.policy = policy
     }

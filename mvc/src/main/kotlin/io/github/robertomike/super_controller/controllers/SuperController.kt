@@ -1,13 +1,16 @@
 package io.github.robertomike.super_controller.controllers
 
+import io.github.robertomike.super_controller.config.builder.SuperControllerConfig
 import io.github.robertomike.super_controller.enums.Methods.*
 import io.github.robertomike.super_controller.exceptions.SuperControllerException
 import io.github.robertomike.super_controller.exceptions.UnauthorizedException
+import io.github.robertomike.super_controller.policies.BasePolicy
 import io.github.robertomike.super_controller.policies.Policy
 import io.github.robertomike.super_controller.requests.Request
 import io.github.robertomike.super_controller.services.interfaces.BasicService
 import jakarta.annotation.PostConstruct
 import jakarta.validation.Valid
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
 import org.springframework.data.domain.Page
@@ -30,6 +33,9 @@ import org.springframework.web.bind.annotation.ResponseStatus
 abstract class SuperController<M, ID : Any, SR : Request, UR : Request>() :
     CrudController<ID, Any, SR, UR, Page<*>, Unit>,
     ControllerUtil<M, Boolean>() {
+
+    private val logger = LoggerFactory.getLogger(SuperController::class.java)
+
     /**
      * The service used for business logic.
      */
@@ -72,6 +78,8 @@ abstract class SuperController<M, ID : Any, SR : Request, UR : Request>() :
         if (basePackage == null) {
             throw SuperControllerException("The base package is not defined")
         }
+
+        logger.debug("SuperController initialized for ${this::class.simpleName}")
     }
 
     /**
@@ -170,6 +178,41 @@ abstract class SuperController<M, ID : Any, SR : Request, UR : Request>() :
         mapper?.let { return page.map { m -> it.mapList(m) } }
 
         return page
+    }
+
+    /**
+     * Applies configuration from a SuperControllerBuilder.
+     *
+     * This method allows you to configure the controller using the fluent builder pattern.
+     * Use the method setConfig to use this.
+     *
+     * Example:
+     * ```kotlin
+     * fun setConfig() {
+     *     val config = SuperControllerBuilder<User, Long, StoreUserRequest, UpdateUserRequest>()
+     *         .withService(userService)
+     *         .withBasePackage("io.github.robertomike.super_controller")
+     *         .withAuthorization(true)
+     *         .build()
+     *
+     *     applyConfig(config)
+     * }
+     * ```
+     *
+     * @param config The configuration to apply.
+     */
+    protected fun applyConfig(config: SuperControllerConfig<M, ID, SR, UR>) {
+        config.service?.let { this.service = it }
+        this.needAuthorization = config.needAuthorization
+        @Suppress("UNCHECKED_CAST")
+        config.policy?.let {
+            this.policy =
+                it as? BasePolicy<M, Request, Request, Boolean>
+        }
+        this.basePackage = config.basePackage
+        // Note: mapper cannot be set here as it's a val property that must be overridden
+        config.onlyUrls?.let { this.onlyUrls = it.toMutableList() }
+        config.exceptUrls?.let { this.exceptUrls = it.toMutableList() }
     }
 
     override fun noPolicy(): Boolean = true

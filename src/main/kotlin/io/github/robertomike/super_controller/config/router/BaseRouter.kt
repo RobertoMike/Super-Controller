@@ -1,20 +1,114 @@
 package io.github.robertomike.super_controller.config.router
 
 import io.github.robertomike.super_controller.controllers.CrudController
+import io.github.robertomike.super_controller.controllers.markers.BulkOperationsMarker
+import io.github.robertomike.super_controller.controllers.markers.SoftDeletableMarker
 import io.github.robertomike.super_controller.enums.Methods
+import org.slf4j.LoggerFactory
+import org.springframework.aop.framework.Advised
+import org.springframework.aop.support.AopUtils
 import org.springframework.web.bind.annotation.RequestMethod
 import java.lang.reflect.Method
 
 abstract class BaseRouter<out C : CrudController<*, *, *, *, *, *>>(
     val controllers: List<C>
 ) {
+    private val logger = LoggerFactory.getLogger(BaseRouter::class.java)
+
     fun registerAll() {
-        controllers.forEach {
-            registerCrud(it, it.baseUrl, it.urls)
+        controllers.map {
+            if (AopUtils.isAopProxy(it) && it is Advised) {
+                return@map it.targetSource.target as C
+            }
+
+            return@map it
+        }.forEach { controller ->
+            // Register standard CRUD routes
+            registerCrud(controller, controller.baseUrl, controller.urls)
+
+            // Register interface extension methods (BulkOperations, SoftDeletable)
+            registerInterfaceMethods(controller)
         }
     }
 
-    fun registerCrud(controller: Any, baseUrl: String, urls: List<Methods>) {
+    /**
+     * Registers extension methods from marker interfaces (BulkOperations, SoftDeletable).
+     * Scans controller for specific method names and registers them with appropriate HTTP methods.
+     */
+    private fun registerInterfaceMethods(controller: C) {
+        val baseUrl = controller.baseUrl
+
+        // Check if controller implements BulkOperations
+        if (controller is BulkOperationsMarker<*, *, *, *>) {
+            logger.debug("Registering BulkOperations routes for ${controller::class.simpleName}")
+
+            registerUrl(
+                controller,
+                "bulkStore",
+                "$baseUrl/bulk",
+                httpMethod = RequestMethod.POST
+            )
+            registerUrl(
+                controller,
+                "bulkUpdate",
+                "$baseUrl/bulk",
+                httpMethod = RequestMethod.PUT
+            )
+            registerUrl(
+                controller,
+                "bulkDelete",
+                "$baseUrl/bulk",
+                httpMethod = RequestMethod.DELETE
+            )
+        }
+
+        // Check if controller implements SoftDeletable
+        if (controller is SoftDeletableMarker<*, *>) {
+            logger.debug("Registering SoftDeletable routes for ${controller::class.simpleName}")
+
+            // DELETE /{id}/soft-delete
+            registerUrl(
+                controller,
+                "softDelete",
+                "$baseUrl/{id}/soft-delete",
+                httpMethod = RequestMethod.DELETE
+            )
+
+            // PUT /{id}/restore
+            registerUrl(
+                controller,
+                "restore",
+                "$baseUrl/{id}/restore",
+                httpMethod = RequestMethod.PUT
+            )
+
+            // DELETE /{id}/force
+            registerUrl(
+                controller,
+                "forceDelete",
+                "$baseUrl/{id}/force",
+                httpMethod = RequestMethod.DELETE
+            )
+        }
+    }
+
+    /**
+     * Registers a method if it exists on the controller.
+     */
+    private fun registerIfMethodExists(controller: C, methodName: String, path: String, httpMethod: RequestMethod) {
+        try {
+            // Check if method exists (we don't care about parameters for route registration)
+            val method = controller.javaClass.methods.find { it.name == methodName }
+            if (method != null) {
+                logger.debug("Registering route: $httpMethod $path -> $methodName")
+                registerUrl(controller, methodName, path, httpMethod)
+            }
+        } catch (e: Exception) {
+            logger.warn("Could not register method $methodName: ${e.message}")
+        }
+    }
+
+    fun registerCrud(controller: @UnsafeVariance C, baseUrl: String, urls: List<Methods>) {
         urls.forEach { url ->
             when (url) {
                 Methods.INDEX -> registerUrl(
@@ -64,7 +158,7 @@ abstract class BaseRouter<out C : CrudController<*, *, *, *, *, *>>(
 
     fun searchMethodFor(controller: Any, method: String): Method {
         return controller.javaClass.methods.find {
-            it.name == method
+            it.name == method && !it.isBridge
         } ?: throw RuntimeException("Cannot find method $method in $controller")
     }
 }

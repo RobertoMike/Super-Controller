@@ -13,6 +13,7 @@ import io.github.robertomike.super_controller.responses.Response
 import io.github.robertomike.super_controller.services.interfaces.BasicService
 import io.github.robertomike.super_controller.utils.ClassUtils
 import io.github.robertomike.super_controller.utils.GenericUtil
+import io.github.robertomike.super_controller.versioning.ApiVersion
 import org.atteo.evo.inflector.English
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
@@ -74,20 +75,58 @@ abstract class ControllerUtil<M, PR> : ClassUtils, GenericUtil {
     var exceptUrls = mutableListOf<Methods>()
 
     /**
-     * The name of the model in plurar
+     * The name of the model in plural
      */
-    private val pluralNameModel: String
+    var path: String? = null
         get() {
-            return English.plural(nameModel)
+            return field ?: English.plural(nameModel)
         }
 
     /**
-     * The base URL for the controller
+     * The base URL for the controller.
+     * Automatically includes version prefix if [@ApiVersion][ApiVersion] annotation is present.
      */
     open val baseUrl: String
         get() {
-            return properties.prefixUrl + pluralNameModel.lowercase(Locale.getDefault())
+            val version = this::class.java.getAnnotation(ApiVersion::class.java)
+            val basePath = properties.prefixUrl + path!!.lowercase(Locale.getDefault())
+            
+            return if (version != null) {
+                // Remove leading slash from base path if present to avoid double slashes
+                val cleanBasePath = basePath.trimStart('/')
+                "/${version.value}/$cleanBasePath"
+            } else {
+                basePath
+            }
         }
+
+    /**
+     * Gets the API version from the @ApiVersion annotation if present.
+     *
+     * @return The API version string, or null if not annotated.
+     */
+    fun getApiVersion(): String? {
+        return this::class.java.getAnnotation(ApiVersion::class.java)?.value
+    }
+
+    /**
+     * Checks if the current API version is deprecated.
+     *
+     * @return True if deprecated, false otherwise.
+     */
+    fun isDeprecated(): Boolean {
+        return this::class.java.getAnnotation(ApiVersion::class.java)?.deprecated ?: false
+    }
+
+    /**
+     * Gets the sunset date for this API version.
+     *
+     * @return The sunset date string, or null if not specified.
+     */
+    fun getSunsetDate(): String? {
+        val version = this::class.java.getAnnotation(ApiVersion::class.java)
+        return version?.sunset?.takeIf { it.isNotBlank() }
+    }
 
     /**
      * The class of the model declared in the generics' controller.

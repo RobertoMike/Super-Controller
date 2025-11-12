@@ -1,9 +1,9 @@
-insert into users (id, name) values
-(1, 'John'),
-(2, 'Jane'),
-(3, 'Joe'),
-(4, 'Jim'),
-(5, 'Mary');
+insert into users (id, name, email) values
+(1, 'John', 'john@example.com'),
+(2, 'Jane', 'jane@example.com'),
+(3, 'Joe', 'joe@example.com'),
+(4, 'Jim', 'jim@example.com'),
+(5, 'Mary', 'mary@example.com');
 
 insert into orders (id, name, user_id, price) values
 (1, 'order a', 1, 100),

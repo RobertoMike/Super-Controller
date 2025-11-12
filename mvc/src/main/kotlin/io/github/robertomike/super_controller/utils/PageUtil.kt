@@ -18,6 +18,8 @@ object PageUtil {
      * @return A Spring Data page containing the transformed data.
      */
     fun <T : BaseModel> transformHefestoPage(query: Baradum<T>, pageable: PageRequest): Page<T> {
+        // Spring PageRequest uses 0-based page numbers
+        // Calculate offset: pageNumber * pageSize (e.g., page 0 = offset 0, page 1 = offset 10)
         val page: io.github.robertomike.hefesto.utils.Page<T> =
             query.page(pageable.pageSize, pageable.pageNumber.toLong() * pageable.pageSize)
 
