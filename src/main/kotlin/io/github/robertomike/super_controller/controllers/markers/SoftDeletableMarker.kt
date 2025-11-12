@@ -76,7 +76,7 @@ interface SoftDeletableMarker<M, ID> where M : SoftDeletableEntity {
      * @return The soft deleted entity.
      */
     @Transactional
-    fun softDelete(id: ID): ResponseEntity<M> {
+    fun softDelete(@org.springframework.web.bind.annotation.PathVariable id: ID): ResponseEntity<M> {
         beforeSoftDelete(id)
         val entity = getSoftDeleteService().softDelete(id)
         afterSoftDelete(entity)
@@ -92,7 +92,7 @@ interface SoftDeletableMarker<M, ID> where M : SoftDeletableEntity {
      * @return The restored entity.
      */
     @Transactional
-    fun restore(id: ID): ResponseEntity<M> {
+    fun restore(@org.springframework.web.bind.annotation.PathVariable id: ID): ResponseEntity<M> {
         beforeRestore(id)
         val entity = getSoftDeleteService().restore(id)
         afterRestore(entity)
@@ -107,7 +107,7 @@ interface SoftDeletableMarker<M, ID> where M : SoftDeletableEntity {
      * @param id The ID of the entity to force delete.
      */
     @Transactional
-    fun forceDelete(id: ID): ResponseEntity<Void> {
+    fun forceDelete(@org.springframework.web.bind.annotation.PathVariable id: ID): ResponseEntity<Void> {
         beforeForceDelete(id)
         getSoftDeleteService().forceDelete(id)
         afterForceDelete(id)

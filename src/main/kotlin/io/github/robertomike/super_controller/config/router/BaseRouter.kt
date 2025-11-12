@@ -92,22 +92,6 @@ abstract class BaseRouter<out C : CrudController<*, *, *, *, *, *>>(
         }
     }
 
-    /**
-     * Registers a method if it exists on the controller.
-     */
-    private fun registerIfMethodExists(controller: C, methodName: String, path: String, httpMethod: RequestMethod) {
-        try {
-            // Check if method exists (we don't care about parameters for route registration)
-            val method = controller.javaClass.methods.find { it.name == methodName }
-            if (method != null) {
-                logger.debug("Registering route: $httpMethod $path -> $methodName")
-                registerUrl(controller, methodName, path, httpMethod)
-            }
-        } catch (e: Exception) {
-            logger.warn("Could not register method $methodName: ${e.message}")
-        }
-    }
-
     fun registerCrud(controller: @UnsafeVariance C, baseUrl: String, urls: List<Methods>) {
         urls.forEach { url ->
             when (url) {

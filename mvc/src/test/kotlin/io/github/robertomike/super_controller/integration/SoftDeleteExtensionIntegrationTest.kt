@@ -52,7 +52,7 @@ class SoftDeleteExtensionIntegrationTest {
 
         // Soft delete the user
         val response = mockMvc.perform(
-            post("/api/users/${saved.id}/soft-delete")
+            delete("/api/users/${saved.id}/soft-delete")
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk)
@@ -77,7 +77,7 @@ class SoftDeleteExtensionIntegrationTest {
 
         // Restore the user
         mockMvc.perform(
-            post("/api/users/${saved.id}/restore")
+            put("/api/users/${saved.id}/restore")
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk)
@@ -123,7 +123,7 @@ class SoftDeleteExtensionIntegrationTest {
         assertEquals(1, userRepository.count(), "Should have 1 user before soft delete")
 
         // Soft delete
-        mockMvc.perform(post("/api/users/${saved.id}/soft-delete"))
+        mockMvc.perform(delete("/api/users/${saved.id}/soft-delete"))
             .andExpect(status().isOk)
 
         // User should still exist in database
@@ -144,9 +144,15 @@ class SoftDeleteExtensionIntegrationTest {
         }
         val saved = userRepository.save(user)
 
-        // Try to soft delete again
-        mockMvc.perform(post("/api/users/${saved.id}/soft-delete"))
-            .andExpect(status().is5xxServerError)  // Should fail
+        // Try to soft delete again - should throw exception
+        try {
+            mockMvc.perform(delete("/api/users/${saved.id}/soft-delete"))
+                .andExpect(status().is5xxServerError)
+        } catch (e: Exception) {
+            // Exception is expected - verify it's the right kind
+            assertTrue(e.cause is IllegalStateException || e is IllegalStateException, 
+                "Should throw IllegalStateException for already deleted entity")
+        }
     }
 
     @Test
@@ -158,9 +164,15 @@ class SoftDeleteExtensionIntegrationTest {
         }
         val saved = userRepository.save(user)
 
-        // Try to restore
-        mockMvc.perform(post("/api/users/${saved.id}/restore"))
-            .andExpect(status().is5xxServerError)  // Should fail
+        // Try to restore - should throw exception
+        try {
+            mockMvc.perform(put("/api/users/${saved.id}/restore"))
+                .andExpect(status().is5xxServerError)
+        } catch (e: Exception) {
+            // Exception is expected - verify it's the right kind
+            assertTrue(e.cause is IllegalStateException || e is IllegalStateException,
+                "Should throw IllegalStateException for non-deleted entity")
+        }
     }
 
     @Test
@@ -191,11 +203,11 @@ class SoftDeleteExtensionIntegrationTest {
         }
         val saved = userRepository.save(user)
 
-        mockMvc.perform(post("/api/users/${saved.id}/soft-delete"))
+        mockMvc.perform(delete("/api/users/${saved.id}/soft-delete"))
             .andExpect(status().isOk)
 
         // OrderController does NOT implement SoftDeletable, so endpoints should 404
-        mockMvc.perform(post("/api/orders/1/soft-delete"))
+        mockMvc.perform(delete("/api/orders/1/soft-delete"))
             .andExpect(status().isNotFound)
     }
 
@@ -212,21 +224,21 @@ class SoftDeleteExtensionIntegrationTest {
         assertNull(saved.deletedAt, "Initial user should not be deleted")
 
         // 2. Soft delete
-        mockMvc.perform(post("/api/users/$userId/soft-delete"))
+        mockMvc.perform(delete("/api/users/$userId/soft-delete"))
             .andExpect(status().isOk)
 
         var updated = userRepository.findById(userId).get()
         assertNotNull(updated.deletedAt, "User should be soft deleted")
 
         // 3. Restore
-        mockMvc.perform(post("/api/users/$userId/restore"))
+        mockMvc.perform(put("/api/users/$userId/restore"))
             .andExpect(status().isOk)
 
         updated = userRepository.findById(userId).get()
         assertNull(updated.deletedAt, "User should be restored")
 
         // 4. Soft delete again
-        mockMvc.perform(post("/api/users/$userId/soft-delete"))
+        mockMvc.perform(delete("/api/users/$userId/soft-delete"))
             .andExpect(status().isOk)
 
         // 5. Force delete

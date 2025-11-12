@@ -3,6 +3,7 @@ package io.github.robertomike.super_controller.controllers.markers
 import io.github.robertomike.super_controller.exceptions.SuperControllerException
 import io.github.robertomike.super_controller.requests.Request
 import io.github.robertomike.super_controller.services.bulk.BulkResult
+import io.github.robertomike.super_controller.services.bulk.BulkDeleteResult
 import io.github.robertomike.super_controller.services.interfaces.BasicService
 import org.springframework.data.domain.Page
 import io.github.robertomike.super_controller.services.bulk.BulkOperations as BulkOperationsService
@@ -112,20 +113,13 @@ interface BulkOperationsMarker<M, ID, SR : Request, UR : Request> {
      * @return Bulk operation results with deletion statistics.
      */
     @Transactional
-    fun bulkDelete(@RequestBody ids: List<ID>): ResponseEntity<BulkResult<M>> {
+    fun bulkDelete(@RequestBody ids: List<ID>): ResponseEntity<BulkDeleteResult> {
         ids.forEach { beforeBulkDelete(it) }
         
         val deleteResult = getBulkService().bulkDelete(ids)
         
-        // Convert BulkDeleteResult to BulkResult for consistent controller response
-        val result = BulkResult<M>(
-            successful = emptyList(), // Delete operations don't return entities
-            failed = deleteResult.errors,
-            totalProcessed = deleteResult.deletedCount + deleteResult.failedCount
-        )
-        
         ids.forEach { afterBulkDelete(it) }
-        return ResponseEntity.ok(result)
+        return ResponseEntity.ok(deleteResult)
     }
     
     // Controller-level hook methods that can be overridden
