@@ -5,6 +5,7 @@ plugins {
     id("java-library")
     `maven-publish`
     id("signing")
+    jacoco
 }
 
 group = "io.github.robertomike"
@@ -52,7 +53,28 @@ kapt {
 
 tasks.test {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
 }
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+}
+
+tasks.jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = "0.80".toBigDecimal()
+            }
+        }
+    }
+}
+
 kotlin {
     jvmToolchain(17)
 }
