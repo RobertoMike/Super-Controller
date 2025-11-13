@@ -58,9 +58,7 @@ class CacheAspect(val cacheManager: CacheManager) {
     fun aroundUpdate(pjp: ProceedingJoinPoint, model: Any, request: Request): Any? {
         val superCache = pjp.getSuperCache()
 
-        println("Before update: args=${pjp.args.joinToString()}")
         val result = pjp.proceed()
-        println("After update: result=$result")
         superCache.putInCache(pjp.target, model.getPrimaryKey().toString(), result)
         return result
     }
@@ -72,9 +70,7 @@ class CacheAspect(val cacheManager: CacheManager) {
     fun aroundDelete(pjp: ProceedingJoinPoint, model: Any): Any? {
         val superCache = pjp.getSuperCache()
 
-        println("Before delete: args=${pjp.args.joinToString()}")
         val result = pjp.proceed()
-        println("After delete: result=$result")
         superCache.evictCache(pjp.target, model.getPrimaryKey().toString())
         return result
     }
@@ -109,9 +105,12 @@ class CacheAspect(val cacheManager: CacheManager) {
     }
 
     fun Any.getPrimaryKey(): Any {
-        return this.javaClass.declaredFields
+        val field = this.javaClass.declaredFields
             .firstOrNull { it.isAnnotationPresent(Id::class.java) }
             ?: throw SuperControllerException("No primary key found for ${this.javaClass.simpleName}")
+        
+        field.isAccessible = true
+        return field.get(this) ?: throw SuperControllerException("Primary key value is null for ${this.javaClass.simpleName}")
     }
 
     fun SuperCache.getFromCache(clazz: Any, key: String): Any? {
@@ -127,6 +126,6 @@ class CacheAspect(val cacheManager: CacheManager) {
     }
 
     fun SuperCache.getPrefix(clazz: Any): String {
-        return if (this.prefix.isBlank()) this.prefix else clazz.javaClass.simpleName
+        return this.prefix.ifBlank { clazz.javaClass.simpleName }
     }
 }

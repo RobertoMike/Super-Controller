@@ -56,7 +56,7 @@ class CacheAspectTest {
         
         `when`(pjp.target).thenReturn(service)
         `when`(cacheManager.getCache("test-cache")).thenReturn(cache)
-        `when`(cache.get("TestService:age=25_name=test")).thenReturn(valueWrapper)
+        `when`(cache.get("test:age=25_name=test")).thenReturn(valueWrapper)
         `when`(valueWrapper.get()).thenReturn(cachedResult)
         
         val result = aspect.aroundIndex(pjp, page, params)
@@ -76,14 +76,14 @@ class CacheAspectTest {
         
         `when`(pjp.target).thenReturn(service)
         `when`(cacheManager.getCache("test-cache")).thenReturn(cache)
-        `when`(cache.get("TestService:name=test")).thenReturn(null)
+        `when`(cache.get("test:name=test")).thenReturn(null)
         `when`(pjp.proceed()).thenReturn(computedResult)
         
         val result = aspect.aroundIndex(pjp, page, params)
         
         assertEquals(computedResult, result)
         verify(pjp).proceed()
-        verify(cache).put("TestService:name=test", computedResult)
+        verify(cache).put("test:name=test", computedResult)
     }
     
     @Test
@@ -114,12 +114,12 @@ class CacheAspectTest {
         
         `when`(pjp.target).thenReturn(service)
         `when`(cacheManager.getCache("test-cache")).thenReturn(cache)
-        `when`(cache.get("TestService:a=first_m=middle_z=last")).thenReturn(null)
+        `when`(cache.get("test:a=first_m=middle_z=last")).thenReturn(null)
         `when`(pjp.proceed()).thenReturn("result")
         
         aspect.aroundIndex(pjp, page, params)
         
-        verify(cache).get("TestService:a=first_m=middle_z=last")
+        verify(cache).get("test:a=first_m=middle_z=last")
     }
     
     @Test
@@ -139,8 +139,8 @@ class CacheAspectTest {
         
         assertEquals(entity, result)
         verify(pjp).proceed()
-        // getPrimaryKey() returns a Field object, toString() gives field representation
-        verify(cache).put(startsWith("TestService:"), eq(entity))
+        // getPrimaryKey() now returns the actual value (42L), which gets converted to "42"
+        verify(cache).put("test:42", entity)
     }
     
     @Test
@@ -216,7 +216,7 @@ class CacheAspectTest {
         
         `when`(pjp.target).thenReturn(service)
         `when`(cacheManager.getCache("test-cache")).thenReturn(cache)
-        `when`(cache.get("TestService:123")).thenReturn(valueWrapper)
+        `when`(cache.get("test:123")).thenReturn(valueWrapper)
         `when`(valueWrapper.get()).thenReturn(cachedEntity)
         
         val result = aspect.aroundFindById(pjp, id)
@@ -235,14 +235,14 @@ class CacheAspectTest {
         
         `when`(pjp.target).thenReturn(service)
         `when`(cacheManager.getCache("test-cache")).thenReturn(cache)
-        `when`(cache.get("TestService:456")).thenReturn(null)
+        `when`(cache.get("test:456")).thenReturn(null)
         `when`(pjp.proceed()).thenReturn(foundEntity)
         
         val result = aspect.aroundFindById(pjp, id)
         
         assertEquals(foundEntity, result)
         verify(pjp).proceed()
-        verify(cache).put("TestService:456", foundEntity)
+        verify(cache).put("test:456", foundEntity)
     }
     
     @Test
@@ -263,7 +263,7 @@ class CacheAspectTest {
     }
     
     @Test
-    fun `getPrimaryKey should return Id field`() {
+    fun `getPrimaryKey should return Id field value`() {
         val entity = TestEntity()
         entity.id = 555L
         
@@ -271,9 +271,8 @@ class CacheAspectTest {
             entity.getPrimaryKey()
         }
         
-        // The function returns a Field object, not the value
-        assert(primaryKey is java.lang.reflect.Field)
-        assertEquals("id", (primaryKey as java.lang.reflect.Field).name)
+        // The function now returns the actual value, not the Field object
+        assertEquals(555L, primaryKey)
     }
     
     @Test
@@ -298,7 +297,7 @@ class CacheAspectTest {
         val cachedValue = "cached-value"
         
         `when`(cacheManager.getCache("test-cache")).thenReturn(cache)
-        `when`(cache.get("TestService:key123")).thenReturn(valueWrapper)
+        `when`(cache.get("test:key123")).thenReturn(valueWrapper)
         `when`(valueWrapper.get()).thenReturn(cachedValue)
         
         val result = with(aspect) {
@@ -315,7 +314,7 @@ class CacheAspectTest {
         val cache = mock(Cache::class.java)
         
         `when`(cacheManager.getCache("test-cache")).thenReturn(cache)
-        `when`(cache.get("TestService:key456")).thenReturn(null)
+        `when`(cache.get("test:key456")).thenReturn(null)
         
         val result = with(aspect) {
             superCache.getFromCache(service, "key456")
@@ -337,7 +336,7 @@ class CacheAspectTest {
             superCache.putInCache(service, "key789", value)
         }
         
-        verify(cache).put("TestService:key789", value)
+        verify(cache).put("test:key789", value)
     }
     
     @Test
@@ -352,12 +351,12 @@ class CacheAspectTest {
             superCache.evictCache(service, "key999")
         }
         
-        verify(cache).evict("TestService:key999")
+        verify(cache).evict("test:key999")
     }
     
     @Test
-    fun `getPrefix should return class simpleName when prefix is not blank`() {
-        // Note: The implementation has inverted logic - it returns simpleName when prefix is NOT blank
+    fun `getPrefix should return annotation prefix when prefix is not blank`() {
+        // When prefix is not blank, return the prefix from the annotation
         val service = TestService()
         val superCache = service.javaClass.getAnnotation(SuperCache::class.java)
         
@@ -365,12 +364,12 @@ class CacheAspectTest {
             superCache.getPrefix(service)
         }
         
-        assertEquals("TestService", prefix)
+        assertEquals("test", prefix)
     }
     
     @Test
-    fun `getPrefix should return blank when prefix is blank`() {
-        // Note: The implementation has inverted logic - it returns blank when prefix IS blank
+    fun `getPrefix should return class simpleName when prefix is blank`() {
+        // When prefix is blank, the implementation falls back to the class simpleName
         val service = BlankPrefixService()
         val superCache = service.javaClass.getAnnotation(SuperCache::class.java)
         
@@ -378,7 +377,7 @@ class CacheAspectTest {
             superCache.getPrefix(service)
         }
         
-        assertEquals("", prefix)
+        assertEquals("BlankPrefixService", prefix)
     }
     
     @Test

@@ -88,25 +88,28 @@ abstract class ControllerUtil<M, PR> : ClassUtils, GenericUtil {
      */
     open val baseUrl: String
         get() {
-            val version = this::class.java.getAnnotation(ApiVersion::class.java)
+            val version = getApiVersion()
             val basePath = properties.prefixUrl + path!!.lowercase(Locale.getDefault())
             
             return if (version != null) {
                 // Remove leading slash from base path if present to avoid double slashes
                 val cleanBasePath = basePath.trimStart('/')
-                "/${version.value}/$cleanBasePath"
+                "/${version}/$cleanBasePath"
             } else {
                 basePath
             }
         }
 
+    fun getApiVersionAnnotation(): ApiVersion? {
+        return this::class.java.getAnnotation(ApiVersion::class.java)
+    }
     /**
      * Gets the API version from the @ApiVersion annotation if present.
      *
      * @return The API version string, or null if not annotated.
      */
     fun getApiVersion(): String? {
-        return this::class.java.getAnnotation(ApiVersion::class.java)?.value
+        return getApiVersionAnnotation()?.value
     }
 
     /**
@@ -115,7 +118,7 @@ abstract class ControllerUtil<M, PR> : ClassUtils, GenericUtil {
      * @return True if deprecated, false otherwise.
      */
     fun isDeprecated(): Boolean {
-        return this::class.java.getAnnotation(ApiVersion::class.java)?.deprecated ?: false
+        return getApiVersionAnnotation()?.deprecated ?: false
     }
 
     /**
@@ -124,7 +127,7 @@ abstract class ControllerUtil<M, PR> : ClassUtils, GenericUtil {
      * @return The sunset date string, or null if not specified.
      */
     fun getSunsetDate(): String? {
-        val version = this::class.java.getAnnotation(ApiVersion::class.java)
+        val version = getApiVersionAnnotation()
         return version?.sunset?.takeIf { it.isNotBlank() }
     }
 
