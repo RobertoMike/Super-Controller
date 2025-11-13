@@ -51,10 +51,10 @@ class SuperControllerTest : BasicTest() {
     @Test
     fun executePolicy_errors() {
         assertThrows<SuperControllerException> {
-            ReflectionTestUtils.invokeMethod(controller, "executePolicy", STORE, null, null)
+            ReflectionTestUtils.invokeMethod<Boolean>(controller, "executePolicy", STORE, null, null)
         }
         assertThrows<SuperControllerException> {
-            ReflectionTestUtils.invokeMethod(controller, "executePolicy", SHOW, null, null)
+            ReflectionTestUtils.invokeMethod<Boolean>(controller, "executePolicy", SHOW, null, null)
         }
     }
 }

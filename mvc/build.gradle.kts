@@ -1,3 +1,6 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     kotlin("jvm") version "2.1.0"
     kotlin("kapt") version "2.1.0"  // Kotlin Annotation Processing Tool
@@ -17,16 +20,19 @@ version = "1.0.1"
 val pomGroupId = group
 val pomVersion = version
 val baseArtifactId = "super-controller-mvc"
-val springBootVersion = "3.0.0"
+val springBootVersion = "3.5.0"
 val baradumApacheVersion = "2.1.1"
 val jdkCompileVersion = 17
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}")
     implementation("io.github.robertomike:baradum:${baradumApacheVersion}")
-    implementation("io.hypersistence:hypersistence-utils-hibernate-62:3.8.1")
+    implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.12.0")
     // MapStruct core library
     implementation("org.mapstruct:mapstruct:1.6.3")
+    
+    // OpenAPI / Swagger Documentation
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
 
     api(project(":"))
     api("org.springframework.boot:spring-boot-starter-web:${springBootVersion}")
@@ -36,6 +42,7 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation("mysql:mysql-connector-java:8.0.33")
+    testImplementation("com.h2database:h2:2.2.224")
     testImplementation("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
 }
 
@@ -157,5 +164,13 @@ java {
     withSourcesJar()
     toolchain {
         languageVersion.set(JavaLanguageVersion.of("$jdkCompileVersion"))
+    }
+}
+
+tasks.withType<KotlinCompile> {
+    compilerOptions {
+        javaParameters.set(true)  // Enable Java parameter names
+        freeCompilerArgs.set(listOf("-Xjsr305=strict"))
+        jvmTarget.set(JvmTarget.JVM_17)  // Match your Java version
     }
 }

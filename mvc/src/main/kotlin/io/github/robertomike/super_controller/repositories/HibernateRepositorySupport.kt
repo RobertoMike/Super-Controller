@@ -39,7 +39,7 @@ class HibernateRepositorySupport : RepositorySupport {
         repository: Repository<M, I>
     ): Optional<M> {
         return repository.castJpa()
-            .findById(id)
+            .findById(id as (I & Any))
     }
 
     /**
@@ -59,7 +59,7 @@ class HibernateRepositorySupport : RepositorySupport {
      */
     override fun <M, I> delete(model: M, repository: Repository<M, I>) {
         repository.castJpa()
-            .delete(model)
+            .delete(model as (M & Any))
     }
 
     private fun <M, I> Repository<M, I>.castJpa(): JpaRepository<M, I> {

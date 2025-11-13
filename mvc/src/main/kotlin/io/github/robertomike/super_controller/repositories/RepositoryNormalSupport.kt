@@ -25,7 +25,7 @@ class RepositoryNormalSupport : RepositorySupport {
      */
     override fun <M, I> persist(model: M, repository: Repository<M, I>) {
         repository.extendsCrudRepository()
-            .save(model)
+            .save(model as (M & Any))
     }
 
     override fun <M, I> findById(
@@ -33,7 +33,7 @@ class RepositoryNormalSupport : RepositorySupport {
         repository: Repository<M, I>
     ): Optional<M> {
         return repository.extendsCrudRepository()
-            .findById(id)
+            .findById(id as (I & Any))
     }
 
     /**
@@ -43,7 +43,7 @@ class RepositoryNormalSupport : RepositorySupport {
      */
     override fun <M, I> update(model: M, repository: Repository<M, I>) {
         repository.extendsCrudRepository()
-            .save(model)
+            .save(model as (M & Any))
     }
 
     /**
@@ -53,7 +53,7 @@ class RepositoryNormalSupport : RepositorySupport {
      */
     override fun <M, I> delete(model: M, repository: Repository<M, I>) {
         repository.extendsCrudRepository()
-            .delete(model)
+            .delete(model as (M & Any))
     }
 
     /**
