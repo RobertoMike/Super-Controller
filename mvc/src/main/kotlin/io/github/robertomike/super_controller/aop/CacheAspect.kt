@@ -86,6 +86,133 @@ class CacheAspect(val cacheManager: CacheManager) {
         return pjp.proceed()
     }
 
+    // ==================== Bulk Operations Support ====================
+    
+    @Around(
+        "execution(* io.github.robertomike.super_controller.services.bulk.BulkOperations.bulkStore(..)) && args(requests) $CACHE_ANNOTATION",
+        argNames = "pjp,requests"
+    )
+    fun aroundBulkStore(pjp: ProceedingJoinPoint, requests: List<*>): Any? {
+        val superCache = pjp.getSuperCache()
+        val result = pjp.proceed()
+        
+        if (superCache.saveOnStore && result != null) {
+            // BulkResult contains a 'successful' list of created entities
+            val bulkResult = result as? io.github.robertomike.super_controller.services.bulk.BulkResult<*>
+            bulkResult?.successful?.forEach { entity ->
+                if (entity != null) {
+                    try {
+                        superCache.putInCache(pjp.target, entity.getPrimaryKey().toString(), entity)
+                    } catch (e: Exception) {
+                        // Skip entities without primary keys or that fail to cache
+                    }
+                }
+            }
+        }
+        
+        return result
+    }
+    
+    @Around(
+        "execution(* io.github.robertomike.super_controller.services.bulk.BulkOperations.bulkUpdate(..)) && args(updates) $CACHE_ANNOTATION",
+        argNames = "pjp,updates"
+    )
+    fun aroundBulkUpdate(pjp: ProceedingJoinPoint, updates: Map<*, *>): Any? {
+        val superCache = pjp.getSuperCache()
+        val result = pjp.proceed()
+        
+        if (result != null) {
+            // BulkResult contains a 'successful' list of updated entities
+            val bulkResult = result as? io.github.robertomike.super_controller.services.bulk.BulkResult<*>
+            bulkResult?.successful?.forEach { entity ->
+                if (entity != null) {
+                    try {
+                        superCache.putInCache(pjp.target, entity.getPrimaryKey().toString(), entity)
+                    } catch (e: Exception) {
+                        // Skip entities without primary keys or that fail to cache
+                    }
+                }
+            }
+        }
+        
+        return result
+    }
+    
+    @Around(
+        "execution(* io.github.robertomike.super_controller.services.bulk.BulkOperations.bulkDelete(..)) && args(ids) $CACHE_ANNOTATION",
+        argNames = "pjp,ids"
+    )
+    fun aroundBulkDelete(pjp: ProceedingJoinPoint, ids: List<*>): Any? {
+        val superCache = pjp.getSuperCache()
+        val result = pjp.proceed()
+        
+        // Evict all IDs from cache except those that failed
+        if (result != null) {
+            val bulkDeleteResult = result as? io.github.robertomike.super_controller.services.bulk.BulkDeleteResult
+            if (bulkDeleteResult != null) {
+                // Evict all IDs that were not in the failed list
+                val failedIdStrings = bulkDeleteResult.failedIds.map { it.toString() }.toSet()
+                ids.forEach { id ->
+                    if (id != null && id.toString() !in failedIdStrings) {
+                        try {
+                            superCache.evictCache(pjp.target, id.toString())
+                        } catch (e: Exception) {
+                            // Skip IDs that fail to evict
+                        }
+                    }
+                }
+            }
+        }
+        
+        return result
+    }
+    
+    // ==================== Soft Delete Operations Support ====================
+    
+    @Around(
+        "execution(* io.github.robertomike.super_controller.services.softdelete.SoftDeletableService.softDelete(..)) && args(id) $CACHE_ANNOTATION",
+        argNames = "pjp,id"
+    )
+    fun aroundSoftDelete(pjp: ProceedingJoinPoint, id: Any): Any? {
+        val superCache = pjp.getSuperCache()
+        val result = pjp.proceed()
+        
+        // Evict soft-deleted entity from cache
+        superCache.evictCache(pjp.target, id.toString())
+        
+        return result
+    }
+    
+    @Around(
+        "execution(* io.github.robertomike.super_controller.services.softdelete.SoftDeletableService.restore(..)) && args(id) $CACHE_ANNOTATION",
+        argNames = "pjp,id"
+    )
+    fun aroundRestore(pjp: ProceedingJoinPoint, id: Any): Any? {
+        val superCache = pjp.getSuperCache()
+        val result = pjp.proceed()
+        
+        // Cache the restored entity if saveSingle is enabled
+        if (superCache.saveSingle && result != null) {
+            superCache.putInCache(pjp.target, id.toString(), result)
+        }
+        
+        return result
+    }
+    
+    @Around(
+        "execution(* io.github.robertomike.super_controller.services.softdelete.SoftDeletableService.forceDelete(..)) && args(id) $CACHE_ANNOTATION",
+        argNames = "pjp,id"
+    )
+    fun aroundForceDelete(pjp: ProceedingJoinPoint, id: Any): Any? {
+        val superCache = pjp.getSuperCache()
+        val result = pjp.proceed()
+        
+        // Evict permanently deleted entity from cache
+        superCache.evictCache(pjp.target, id.toString())
+        
+        return result
+    }
+
     fun ProceedingJoinPoint.getSuperCache(): SuperCache {
         return target.javaClass.getAnnotation(SuperCache::class.java)
     }
