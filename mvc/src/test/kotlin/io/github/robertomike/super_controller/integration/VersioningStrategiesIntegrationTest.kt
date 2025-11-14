@@ -97,31 +97,35 @@ class ControllerUtilBaseUrlIntegrationTest : BasicTest() {
 }
 
 /**
- * Integration tests demonstrating how versioning would work with URI strategy.
+ * Integration tests for backward compatibility with versioning enabled.
  * 
- * Note: These tests document the expected behavior. Full versioning support
- * requires controllers to be annotated with @ApiVersion.
+ * These tests verify that controllers WITHOUT @ApiVersion annotation continue
+ * to work normally even when versioning is enabled. This ensures backward
+ * compatibility - you can enable versioning without breaking existing controllers.
+ * 
+ * Note: To actually test versioning strategies, controllers must be annotated
+ * with @ApiVersion. The UserController used in these tests is intentionally
+ * NOT annotated to test backward compatibility.
  */
 @TestPropertySource(properties = [
     "super-controller.versioning.enabled=true",
     "super-controller.versioning.strategy=URI",
     "super-controller.versioning.default-version=v1"
 ])
-class VersioningStrategyDocumentationTest : BasicTest() {
+class BackwardCompatibilityWithVersioningEnabledTest : BasicTest() {
 
     @Test
-    fun `URI strategy - version would be in URL path if controller had ApiVersion annotation`() {
-        // For URI strategy: URL would be /v1/api/users if controller had @ApiVersion("v1")
-        // Without @ApiVersion, controller works normally at /api/users
+    fun `controllers without ApiVersion annotation should work normally with versioning enabled`() {
+        // UserController doesn't have @ApiVersion, so it works at /api/users
+        // even when versioning is enabled
         mockMvc.perform(get("/api/users"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.content").isArray)
     }
     
     @Test
-    fun `HEADER strategy - version would be in header if controller had ApiVersion annotation`() {
-        // For HEADER strategy: URL stays /api/users, version in X-API-Version header
-        // Without @ApiVersion, controller works normally
+    fun `non-versioned controllers should ignore version headers`() {
+        // UserController doesn't have @ApiVersion, so version header is ignored
         mockMvc.perform(
             get("/api/users")
                 .header("X-API-Version", "v1")
@@ -131,18 +135,16 @@ class VersioningStrategyDocumentationTest : BasicTest() {
     }
     
     @Test
-    fun `PARAMETER strategy - version would be in query param if controller had ApiVersion annotation`() {
-        // For PARAMETER strategy: URL with ?version=v1
-        // Without @ApiVersion, controller works normally
+    fun `non-versioned controllers should ignore version parameters`() {
+        // UserController doesn't have @ApiVersion, so version parameter is ignored
         mockMvc.perform(get("/api/users?version=v1"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.content").isArray)
     }
     
     @Test
-    fun `ACCEPT_HEADER strategy - version would be in Accept header if controller had ApiVersion annotation`() {
-        // For ACCEPT_HEADER strategy: version in Accept: application/vnd.api.v1+json
-        // Without @ApiVersion, controller works normally
+    fun `non-versioned controllers should ignore Accept header version`() {
+        // UserController doesn't have @ApiVersion, so versioned Accept header is ignored
         mockMvc.perform(
             get("/api/users")
                 .header("Accept", "application/vnd.api.v1+json")

@@ -67,10 +67,19 @@ class ApiVersionRequestCondition(
 
     /**
      * Extracts the API version from the request based on the configured strategy.
+     * 
+     * Note: This condition is only used for HEADER, PARAMETER, and ACCEPT_HEADER strategies.
+     * For URI strategy, Spring's standard RequestMapping handles routing based on the URL path
+     * (controllers include version in their @RequestMapping path).
      */
     private fun extractVersionFromRequest(request: HttpServletRequest): String? {
         return when (config.strategy) {
-            VersionStrategy.URI -> extractVersionFromUri(request)
+            VersionStrategy.URI -> {
+                // This case should never be reached in practice because
+                // ApiVersionRequestMappingHandlerMapping is only created for non-URI strategies.
+                // Included for completeness.
+                extractVersionFromUri(request)
+            }
             VersionStrategy.HEADER -> request.getHeader(config.headerName)
             VersionStrategy.PARAMETER -> request.getParameter(config.paramName)
             VersionStrategy.ACCEPT_HEADER -> extractVersionFromAcceptHeader(request)
@@ -79,6 +88,10 @@ class ApiVersionRequestCondition(
 
     /**
      * Extracts version from URI path (e.g., /v1/users -> v1).
+     * 
+     * Note: This method exists for completeness but is not used in practice.
+     * URI strategy uses standard Spring @RequestMapping with version in the path,
+     * so this RequestCondition is not involved in URI-based routing.
      */
     private fun extractVersionFromUri(request: HttpServletRequest): String? {
         val path = request.requestURI
