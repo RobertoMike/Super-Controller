@@ -14,6 +14,8 @@ import io.github.robertomike.super_controller.services.interfaces.BasicService
 import io.github.robertomike.super_controller.utils.ClassUtils
 import io.github.robertomike.super_controller.utils.GenericUtil
 import io.github.robertomike.super_controller.versioning.ApiVersion
+import io.github.robertomike.super_controller.versioning.VersionStrategy
+import io.github.robertomike.super_controller.versioning.VersioningConfig
 import org.atteo.evo.inflector.English
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
@@ -32,6 +34,12 @@ abstract class ControllerUtil<M, PR> : ClassUtils, GenericUtil {
      */
     @Autowired
     lateinit var properties: ConfigProperties
+
+    /**
+     * The versioning configuration (optional - only present if versioning is enabled).
+     */
+    @Autowired(required = false)
+    var versioningConfig: VersioningConfig? = null
 
     /**
      * The mapper used for to map requests and responses for business logic.
@@ -84,14 +92,21 @@ abstract class ControllerUtil<M, PR> : ClassUtils, GenericUtil {
 
     /**
      * The base URL for the controller.
-     * Automatically includes version prefix if [@ApiVersion][ApiVersion] annotation is present.
+     * 
+     * Behavior depends on versioning strategy:
+     * - **URI strategy** (or no versioning): Version is part of the URL path (e.g., /api/v1/users)
+     * - **HEADER/PARAMETER/ACCEPT_HEADER strategies**: Version is NOT in the URL (e.g., /api/users)
+     *   because routing is handled by request conditions based on headers/params.
      */
     open val baseUrl: String
         get() {
             val version = getApiVersion()
             val basePath = properties.prefixUrl + path!!.lowercase(Locale.getDefault())
             
-            return if (version != null) {
+            // Only include version in URL for URI strategy or when versioning is not configured
+            val useUriVersioning = versioningConfig?.strategy == VersionStrategy.URI || versioningConfig == null
+            
+            return if (version != null && useUriVersioning) {
                 // Remove leading slash from base path if present to avoid double slashes
                 val cleanBasePath = basePath.trimStart('/')
                 "/${version}/$cleanBasePath"

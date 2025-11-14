@@ -7,6 +7,7 @@ import io.github.robertomike.super_controller.controllers.markers.SoftDeletableM
 import io.github.robertomike.super_controller.versioning.ApiVersion
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.Operation
+import io.swagger.v3.oas.models.PathItem
 import io.swagger.v3.oas.models.info.Info
 import io.swagger.v3.oas.models.media.Schema
 import io.swagger.v3.oas.models.parameters.Parameter
@@ -98,7 +99,7 @@ open class OpenApiConfig {
             resourceName
         }
 
-        val tags = openApiDoc?.tags?.toList() ?: listOf(resourceName.capitalize())
+        val tags = openApiDoc?.tags?.toList() ?: listOf(resourceName.replaceFirstChar { it.uppercase() })
 
         // Enhance standard CRUD operations
         enhanceCrudOperations(openApi, baseUrl, singularName, resourceName, tags, apiVersion)
@@ -128,50 +129,50 @@ open class OpenApiConfig {
         val paths = openApi.paths ?: return
 
         // Index operation (GET /resource)
-        paths[baseUrl]?.get?.let { operation ->
-            operation.summary = "List $resourceName"
-            operation.description = "Retrieve a list of $resourceName with pagination support"
-            operation.tags = tags
-            operation.operationId = prefixWithVersion("index${resourceName.capitalize()}", apiVersion)
-            addPaginationParameters(operation)
-            markDeprecatedIfNeeded(operation, apiVersion)
-        }
+        val indexPath = paths[baseUrl] ?: PathItem().also { paths.addPathItem(baseUrl, it) }
+        val indexOperation = indexPath.get ?: Operation().also { indexPath.get = it }
+        indexOperation.summary = "List $resourceName"
+        indexOperation.description = "Retrieve a list of $resourceName with pagination support"
+        indexOperation.tags = tags
+        indexOperation.operationId = prefixWithVersion("index${resourceName.replaceFirstChar { it.uppercase() }}", apiVersion)
+        addPaginationParameters(indexOperation)
+        markDeprecatedIfNeeded(indexOperation, apiVersion)
 
         // Store operation (POST /resource)
-        paths[baseUrl]?.post?.let { operation ->
-            operation.summary = "Create $singularName"
-            operation.description = "Create a new $singularName"
-            operation.tags = tags
-            operation.operationId = prefixWithVersion("create${singularName.capitalize()}", apiVersion)
-            markDeprecatedIfNeeded(operation, apiVersion)
-        }
+        val storePath = paths[baseUrl] ?: PathItem().also { paths.addPathItem(baseUrl, it) }
+        val storeOperation = storePath.post ?: Operation().also { storePath.post = it }
+        storeOperation.summary = "Create $singularName"
+        storeOperation.description = "Create a new $singularName"
+        storeOperation.tags = tags
+        storeOperation.operationId = prefixWithVersion("create${singularName.replaceFirstChar { it.uppercase() }}", apiVersion)
+        markDeprecatedIfNeeded(storeOperation, apiVersion)
 
         // Show operation (GET /resource/{id})
-        paths["$baseUrl/{id}"]?.get?.let { operation ->
-            operation.summary = "Get $singularName"
-            operation.description = "Retrieve a single $singularName by ID"
-            operation.tags = tags
-            operation.operationId = prefixWithVersion("get${singularName.capitalize()}", apiVersion)
-            markDeprecatedIfNeeded(operation, apiVersion)
-        }
+        val showPath = paths["$baseUrl/{id}"] ?: PathItem().also { paths.addPathItem("$baseUrl/{id}", it) }
+        val showOperation = showPath.get ?: Operation().also { showPath.get = it }
+        showOperation.summary = "Get $singularName"
+        showOperation.description = "Retrieve a single $singularName by ID"
+        showOperation.tags = tags
+        showOperation.operationId = prefixWithVersion("get${singularName.replaceFirstChar { it.uppercase() }}", apiVersion)
+        markDeprecatedIfNeeded(showOperation, apiVersion)
 
         // Update operation (PUT /resource/{id})
-        paths["$baseUrl/{id}"]?.put?.let { operation ->
-            operation.summary = "Update $singularName"
-            operation.description = "Update an existing $singularName"
-            operation.tags = tags
-            operation.operationId = prefixWithVersion("update${singularName.capitalize()}", apiVersion)
-            markDeprecatedIfNeeded(operation, apiVersion)
-        }
+        val updatePath = paths["$baseUrl/{id}"] ?: PathItem().also { paths.addPathItem("$baseUrl/{id}", it) }
+        val updateOperation = updatePath.put ?: Operation().also { updatePath.put = it }
+        updateOperation.summary = "Update $singularName"
+        updateOperation.description = "Update an existing $singularName"
+        updateOperation.tags = tags
+        updateOperation.operationId = prefixWithVersion("update${singularName.replaceFirstChar { it.uppercase() }}", apiVersion)
+        markDeprecatedIfNeeded(updateOperation, apiVersion)
 
         // Delete operation (DELETE /resource/{id})
-        paths["$baseUrl/{id}"]?.delete?.let { operation ->
-            operation.summary = "Delete $singularName"
-            operation.description = "Delete a $singularName by ID"
-            operation.tags = tags
-            operation.operationId = prefixWithVersion("delete${singularName.capitalize()}", apiVersion)
-            markDeprecatedIfNeeded(operation, apiVersion)
-        }
+        val deletePath = paths["$baseUrl/{id}"] ?: PathItem().also { paths.addPathItem("$baseUrl/{id}", it) }
+        val deleteOperation = deletePath.delete ?: Operation().also { deletePath.delete = it }
+        deleteOperation.summary = "Delete $singularName"
+        deleteOperation.description = "Delete a $singularName by ID"
+        deleteOperation.tags = tags
+        deleteOperation.operationId = prefixWithVersion("delete${singularName.replaceFirstChar { it.uppercase() }}", apiVersion)
+        markDeprecatedIfNeeded(deleteOperation, apiVersion)
     }
 
     /**
@@ -187,31 +188,31 @@ open class OpenApiConfig {
         val paths = openApi.paths ?: return
 
         // Bulk create (POST /resource/bulk)
-        paths["$baseUrl/bulk"]?.post?.let { operation ->
-            operation.summary = "Bulk create ${singularName}s"
-            operation.description = "Create multiple ${singularName}s in a single request"
-            operation.tags = tags
-            operation.operationId = prefixWithVersion("bulkCreate${singularName.capitalize()}", apiVersion)
-            markDeprecatedIfNeeded(operation, apiVersion)
-        }
+        val bulkCreatePath = paths["$baseUrl/bulk"] ?: PathItem().also { paths.addPathItem("$baseUrl/bulk", it) }
+        val bulkCreateOperation = bulkCreatePath.post ?: Operation().also { bulkCreatePath.post = it }
+        bulkCreateOperation.summary = "Bulk create ${singularName}s"
+        bulkCreateOperation.description = "Create multiple ${singularName}s in a single request"
+        bulkCreateOperation.tags = tags
+        bulkCreateOperation.operationId = prefixWithVersion("bulkCreate${singularName.replaceFirstChar { it.uppercase() }}", apiVersion)
+        markDeprecatedIfNeeded(bulkCreateOperation, apiVersion)
 
         // Bulk update (PUT /resource/bulk)
-        paths["$baseUrl/bulk"]?.put?.let { operation ->
-            operation.summary = "Bulk update ${singularName}s"
-            operation.description = "Update multiple ${singularName}s in a single request"
-            operation.tags = tags
-            operation.operationId = prefixWithVersion("bulkUpdate${singularName.capitalize()}", apiVersion)
-            markDeprecatedIfNeeded(operation, apiVersion)
-        }
+        val bulkUpdatePath = paths["$baseUrl/bulk"] ?: PathItem().also { paths.addPathItem("$baseUrl/bulk", it) }
+        val bulkUpdateOperation = bulkUpdatePath.put ?: Operation().also { bulkUpdatePath.put = it }
+        bulkUpdateOperation.summary = "Bulk update ${singularName}s"
+        bulkUpdateOperation.description = "Update multiple ${singularName}s in a single request"
+        bulkUpdateOperation.tags = tags
+        bulkUpdateOperation.operationId = prefixWithVersion("bulkUpdate${singularName.replaceFirstChar { it.uppercase() }}", apiVersion)
+        markDeprecatedIfNeeded(bulkUpdateOperation, apiVersion)
 
         // Bulk delete (DELETE /resource/bulk)
-        paths["$baseUrl/bulk"]?.delete?.let { operation ->
-            operation.summary = "Bulk delete ${singularName}s"
-            operation.description = "Delete multiple ${singularName}s in a single request"
-            operation.tags = tags
-            operation.operationId = prefixWithVersion("bulkDelete${singularName.capitalize()}", apiVersion)
-            markDeprecatedIfNeeded(operation, apiVersion)
-        }
+        val bulkDeletePath = paths["$baseUrl/bulk"] ?: PathItem().also { paths.addPathItem("$baseUrl/bulk", it) }
+        val bulkDeleteOperation = bulkDeletePath.delete ?: Operation().also { bulkDeletePath.delete = it }
+        bulkDeleteOperation.summary = "Bulk delete ${singularName}s"
+        bulkDeleteOperation.description = "Delete multiple ${singularName}s in a single request"
+        bulkDeleteOperation.tags = tags
+        bulkDeleteOperation.operationId = prefixWithVersion("bulkDelete${singularName.replaceFirstChar { it.uppercase() }}", apiVersion)
+        markDeprecatedIfNeeded(bulkDeleteOperation, apiVersion)
     }
 
     /**
@@ -227,31 +228,31 @@ open class OpenApiConfig {
         val paths = openApi.paths ?: return
 
         // Soft delete (DELETE /resource/{id}/soft-delete)
-        paths["$baseUrl/{id}/soft-delete"]?.delete?.let { operation ->
-            operation.summary = "Soft delete $singularName"
-            operation.description = "Soft delete a $singularName (can be restored later)"
-            operation.tags = tags
-            operation.operationId = prefixWithVersion("softDelete${singularName.capitalize()}", apiVersion)
-            markDeprecatedIfNeeded(operation, apiVersion)
-        }
+        val softDeletePath = paths["$baseUrl/{id}/soft-delete"] ?: PathItem().also { paths.addPathItem("$baseUrl/{id}/soft-delete", it) }
+        val softDeleteOperation = softDeletePath.delete ?: Operation().also { softDeletePath.delete = it }
+        softDeleteOperation.summary = "Soft delete $singularName"
+        softDeleteOperation.description = "Soft delete a $singularName (can be restored later)"
+        softDeleteOperation.tags = tags
+        softDeleteOperation.operationId = prefixWithVersion("softDelete${singularName.replaceFirstChar { it.uppercase() }}", apiVersion)
+        markDeprecatedIfNeeded(softDeleteOperation, apiVersion)
 
         // Restore (PUT /resource/{id}/restore)
-        paths["$baseUrl/{id}/restore"]?.put?.let { operation ->
-            operation.summary = "Restore $singularName"
-            operation.description = "Restore a soft-deleted $singularName"
-            operation.tags = tags
-            operation.operationId = prefixWithVersion("restore${singularName.capitalize()}", apiVersion)
-            markDeprecatedIfNeeded(operation, apiVersion)
-        }
+        val restorePath = paths["$baseUrl/{id}/restore"] ?: PathItem().also { paths.addPathItem("$baseUrl/{id}/restore", it) }
+        val restoreOperation = restorePath.put ?: Operation().also { restorePath.put = it }
+        restoreOperation.summary = "Restore $singularName"
+        restoreOperation.description = "Restore a soft-deleted $singularName"
+        restoreOperation.tags = tags
+        restoreOperation.operationId = prefixWithVersion("restore${singularName.replaceFirstChar { it.uppercase() }}", apiVersion)
+        markDeprecatedIfNeeded(restoreOperation, apiVersion)
 
         // Force delete (DELETE /resource/{id}/force)
-        paths["$baseUrl/{id}/force"]?.delete?.let { operation ->
-            operation.summary = "Force delete $singularName"
-            operation.description = "Permanently delete a $singularName (cannot be undone)"
-            operation.tags = tags
-            operation.operationId = prefixWithVersion("forceDelete${singularName.capitalize()}", apiVersion)
-            markDeprecatedIfNeeded(operation, apiVersion)
-        }
+        val forceDeletePath = paths["$baseUrl/{id}/force"] ?: PathItem().also { paths.addPathItem("$baseUrl/{id}/force", it) }
+        val forceDeleteOperation = forceDeletePath.delete ?: Operation().also { forceDeletePath.delete = it }
+        forceDeleteOperation.summary = "Force delete $singularName"
+        forceDeleteOperation.description = "Permanently delete a $singularName (cannot be undone)"
+        forceDeleteOperation.tags = tags
+        forceDeleteOperation.operationId = prefixWithVersion("forceDelete${singularName.replaceFirstChar { it.uppercase() }}", apiVersion)
+        markDeprecatedIfNeeded(forceDeleteOperation, apiVersion)
     }
 
     /**

@@ -1,6 +1,3 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     kotlin("jvm") version "2.1.0"
     kotlin("kapt") version "2.1.0"  // Kotlin Annotation Processing Tool
@@ -30,7 +27,7 @@ dependencies {
     implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.12.0")
     // MapStruct core library
     implementation("org.mapstruct:mapstruct:1.6.3")
-    
+
     // OpenAPI / Swagger Documentation
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
 
@@ -80,6 +77,9 @@ tasks.jacocoTestCoverageVerification {
 
 kotlin {
     jvmToolchain(17)
+    compilerOptions {
+        javaParameters = true
+    }
 }
 
 
@@ -164,13 +164,5 @@ java {
     withSourcesJar()
     toolchain {
         languageVersion.set(JavaLanguageVersion.of("$jdkCompileVersion"))
-    }
-}
-
-tasks.withType<KotlinCompile> {
-    compilerOptions {
-        javaParameters.set(true)  // Enable Java parameter names
-        freeCompilerArgs.set(listOf("-Xjsr305=strict"))
-        jvmTarget.set(JvmTarget.JVM_17)  // Match your Java version
     }
 }

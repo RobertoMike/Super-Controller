@@ -18,7 +18,19 @@ import org.springframework.web.servlet.HandlerInterceptor
  * - X-API-Version: {version}
  * - Link: {documentation_url}; rel="deprecation" (if documentation URL is specified)
  *
- * Example configuration:
+ * This interceptor is automatically registered when versioning is enabled in application.properties:
+ * ```properties
+ * super-controller.versioning.enabled=true
+ * super-controller.versioning.add-deprecation-headers=true
+ * ```
+ *
+ * To disable only the deprecation headers while keeping versioning:
+ * ```properties
+ * super-controller.versioning.enabled=true
+ * super-controller.versioning.add-deprecation-headers=false
+ * ```
+ *
+ * Manual configuration (if not using auto-configuration):
  * ```kotlin
  * @Configuration
  * class WebMvcConfig : WebMvcConfigurer {
