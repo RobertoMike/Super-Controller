@@ -37,7 +37,7 @@ import java.lang.reflect.Method
  * @property config The versioning configuration
  */
 class ApiVersionRequestMappingHandlerMapping(
-    private val config: VersioningConfig
+    private val config: VersioningProperties
 ) : RequestMappingHandlerMapping() {
 
     init {

@@ -152,4 +152,24 @@ class BackwardCompatibilityWithVersioningEnabledTest : BasicTest() {
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.content").isArray)
     }
+
+    @Test
+    fun `versioned controllers with uri strategy should ignore Accept header version`() {
+        mockMvc.perform(
+            get("/api/V2/strange-users")
+                .header("Accept", "application/vnd.api.v1+json")
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.content").isArray)
+    }
+
+    @Test
+    fun `versioned controllers should respond correctly`() {
+        mockMvc.perform(
+            get("/api/V2/strange-users")
+                .header("Accept", "application/vnd.api.v1+json")
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.content").isArray)
+    }
 }

@@ -26,7 +26,7 @@ package io.github.robertomike.super_controller.versioning
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
 annotation class ApiVersion(
-    val value: String,
+    val value: String = "",
     val deprecated: Boolean = false,
     val sunset: String = "",
     val documentationUrl: String = ""

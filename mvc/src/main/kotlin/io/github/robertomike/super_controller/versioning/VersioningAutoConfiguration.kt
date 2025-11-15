@@ -14,7 +14,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
  * - `super-controller.versioning.enabled=true` is set in application properties
  *
  * It provides:
- * - [VersioningConfig] bean from properties
  * - [ApiVersionInterceptor] automatically registered to add deprecation headers
  * - [ApiVersionRequestMappingHandlerMapping] for non-URI strategies (HEADER, PARAMETER, ACCEPT_HEADER)
  *
@@ -81,23 +80,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 open class VersioningAutoConfiguration(
     private val properties: VersioningProperties
 ) : WebMvcConfigurer {
-
-    /**
-     * Creates the versioning configuration bean from properties.
-     */
-    @Bean
-    open fun versioningConfig(): VersioningConfig {
-        return properties.toConfig().apply {
-            validate()
-        }
-    }
-
     /**
      * Creates the API version interceptor bean.
      */
     @Bean
-    open fun apiVersionInterceptor(config: VersioningConfig): ApiVersionInterceptor {
-        return ApiVersionInterceptor(config)
+    open fun apiVersionInterceptor(): ApiVersionInterceptor {
+        return ApiVersionInterceptor(properties)
     }
 
     /**
@@ -110,10 +98,10 @@ open class VersioningAutoConfiguration(
      * create this bean for other strategies.
      */
     @Bean
-    open fun apiVersionRequestMappingHandlerMapping(config: VersioningConfig): ApiVersionRequestMappingHandlerMapping? {
+    open fun apiVersionRequestMappingHandlerMapping(): ApiVersionRequestMappingHandlerMapping? {
         // Only create for non-URI strategies
-        return if (config.strategy != VersionStrategy.URI) {
-            ApiVersionRequestMappingHandlerMapping(config)
+        return if (properties.strategy != VersionStrategy.URI) {
+            ApiVersionRequestMappingHandlerMapping(properties)
         } else {
             null
         }
@@ -126,7 +114,7 @@ open class VersioningAutoConfiguration(
      */
     override fun addInterceptors(registry: InterceptorRegistry) {
         if (properties.addDeprecationHeaders) {
-            registry.addInterceptor(apiVersionInterceptor(versioningConfig()))
+            registry.addInterceptor(apiVersionInterceptor())
         }
     }
 }

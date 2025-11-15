@@ -22,7 +22,7 @@ import kotlin.test.assertTrue
 class VersioningAutoConfigurationTest : BasicTest() {
 
     @Autowired(required = false)
-    private var versioningConfig: VersioningConfig? = null
+    private var versioningConfig: VersioningProperties? = null
 
     @Autowired(required = false)
     private var apiVersionInterceptor: ApiVersionInterceptor? = null
@@ -51,7 +51,7 @@ class VersioningAutoConfigurationTest : BasicTest() {
 class VersioningDisabledTest : BasicTest() {
 
     @Autowired(required = false)
-    private var versioningConfig: VersioningConfig? = null
+    private var versioningConfig: VersioningProperties? = null
 
     @Autowired(required = false)
     private var apiVersionInterceptor: ApiVersionInterceptor? = null

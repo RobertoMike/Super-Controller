@@ -14,8 +14,7 @@ import io.github.robertomike.super_controller.services.interfaces.BasicService
 import io.github.robertomike.super_controller.utils.ClassUtils
 import io.github.robertomike.super_controller.utils.GenericUtil
 import io.github.robertomike.super_controller.versioning.ApiVersion
-import io.github.robertomike.super_controller.versioning.VersionStrategy
-import io.github.robertomike.super_controller.versioning.VersioningConfig
+import io.github.robertomike.super_controller.versioning.VersioningProperties
 import org.atteo.evo.inflector.English
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
@@ -39,7 +38,7 @@ abstract class ControllerUtil<M, PR> : ClassUtils, GenericUtil {
      * The versioning configuration (optional - only present if versioning is enabled).
      */
     @Autowired(required = false)
-    var versioningConfig: VersioningConfig? = null
+    var versioningConfig: VersioningProperties? = null
 
     /**
      * The mapper used for to map requests and responses for business logic.
@@ -101,17 +100,19 @@ abstract class ControllerUtil<M, PR> : ClassUtils, GenericUtil {
     open val baseUrl: String
         get() {
             val version = getApiVersion()
-            val basePath = properties.prefixUrl + path!!.lowercase(Locale.getDefault())
+            val basePath = path!!.lowercase(Locale.getDefault())
+            val prefix = properties.prefixUrl
             
             // Only include version in URL for URI strategy or when versioning is not configured
-            val useUriVersioning = versioningConfig?.strategy == VersionStrategy.URI || versioningConfig == null
+            val useUriVersioning = versioningConfig?.strategy?.isUri() ?: false
             
             return if (version != null && useUriVersioning) {
                 // Remove leading slash from base path if present to avoid double slashes
                 val cleanBasePath = basePath.trimStart('/')
-                "/${version}/$cleanBasePath"
+                val cleanPrefix = prefix.trimEnd('/')
+                cleanPrefix + "/${version}/$cleanBasePath"
             } else {
-                basePath
+                prefix + basePath
             }
         }
 
@@ -124,7 +125,7 @@ abstract class ControllerUtil<M, PR> : ClassUtils, GenericUtil {
      * @return The API version string, or null if not annotated.
      */
     fun getApiVersion(): String? {
-        return getApiVersionAnnotation()?.value
+        return getApiVersionAnnotation()?.value?.ifBlank { versioningConfig?.defaultVersion }
     }
 
     /**

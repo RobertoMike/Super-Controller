@@ -2,6 +2,7 @@ package io.github.robertomike.super_controller.units
 
 import io.github.robertomike.super_controller.openapi.OpenApiConfig
 import io.github.robertomike.super_controller.openapi.OpenApiProperties
+import io.github.robertomike.super_controller.versioning.VersioningProperties
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.Operation
 import io.swagger.v3.oas.models.PathItem
@@ -35,14 +36,15 @@ class OpenApiConfigTest {
 
     @BeforeEach
     fun setup() {
-        config = OpenApiConfig()
+        val versionProperties = VersioningProperties()
         properties = OpenApiProperties(
             enabled = true,
             title = "Test API",
             description = "Test Description",
             version = "1.0.0"
         )
-        openAPI = config.customOpenAPI(properties)
+        config = OpenApiConfig(properties, versionProperties)
+        openAPI = config.customOpenAPI()
     }
 
     // =================================================================
@@ -61,16 +63,6 @@ class OpenApiConfigTest {
     }
 
     @Test
-    fun `customOpenAPI uses default properties when not specified`() {
-        val defaultProps = OpenApiProperties()
-        val defaultOpenAPI = config.customOpenAPI(defaultProps)
-        
-        assertEquals("API Documentation", defaultOpenAPI.info.title)
-        assertEquals("RESTful API built with Super-Controller", defaultOpenAPI.info.description)
-        assertEquals("1.0.0", defaultOpenAPI.info.version)
-    }
-
-    @Test
     fun `OpenApiProperties has correct defaults`() {
         val props = OpenApiProperties()
         assertEquals(false, props.enabled)
@@ -78,28 +70,6 @@ class OpenApiConfigTest {
         assertEquals("RESTful API built with Super-Controller", props.description)
         assertEquals("1.0.0", props.version)
         assertTrue(props.servers.isEmpty())
-    }
-
-    @Test
-    fun `openApiProperties bean can be created`() {
-        val props = config.openApiProperties()
-        assertNotNull(props)
-        assertFalse(props.enabled) // Default is false
-    }
-
-    @Test
-    fun `OpenAPI info can be customized`() {
-        val customProps = OpenApiProperties(
-            enabled = true,
-            title = "Custom API",
-            description = "Custom Description",
-            version = "2.0.0"
-        )
-        val customOpenAPI = config.customOpenAPI(customProps)
-        
-        assertEquals("Custom API", customOpenAPI.info.title)
-        assertEquals("Custom Description", customOpenAPI.info.description)
-        assertEquals("2.0.0", customOpenAPI.info.version)
     }
 
     @Test

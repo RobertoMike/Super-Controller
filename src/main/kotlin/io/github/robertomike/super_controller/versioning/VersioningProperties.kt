@@ -1,6 +1,8 @@
 package io.github.robertomike.super_controller.versioning
 
+import jakarta.validation.constraints.NotBlank
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.validation.annotation.Validated
 
 /**
  * Configuration properties for API versioning.
@@ -26,26 +28,18 @@ import org.springframework.boot.context.properties.ConfigurationProperties
  * @property addDeprecationHeaders Whether to add deprecation headers to responses
  */
 @ConfigurationProperties(prefix = "super-controller.versioning")
+@Validated
 data class VersioningProperties(
     var enabled: Boolean = false,
+    @NotBlank
     var defaultVersion: String = "v1",
+    @NotBlank
     var strategy: VersionStrategy = VersionStrategy.URI,
+    @NotBlank
     var headerName: String = "X-API-Version",
+    @NotBlank
     var paramName: String = "version",
+    @NotBlank
     var mediaTypePrefix: String = "application/vnd.api",
     var addDeprecationHeaders: Boolean = true
-) {
-    /**
-     * Converts these properties to a VersioningConfig.
-     */
-    fun toConfig(): VersioningConfig {
-        return VersioningConfig(
-            defaultVersion = defaultVersion,
-            strategy = strategy,
-            headerName = headerName,
-            paramName = paramName,
-            mediaTypePrefix = mediaTypePrefix,
-            addDeprecationHeaders = addDeprecationHeaders
-        )
-    }
-}
+)

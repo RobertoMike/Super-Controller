@@ -46,7 +46,7 @@ import org.springframework.web.servlet.HandlerInterceptor
  * @property config The versioning configuration.
  */
 class ApiVersionInterceptor(
-    private val config: VersioningConfig
+    private val config: VersioningProperties
 ) : HandlerInterceptor {
 
     override fun preHandle(

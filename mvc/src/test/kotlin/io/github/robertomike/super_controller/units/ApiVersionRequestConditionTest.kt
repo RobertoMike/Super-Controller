@@ -2,7 +2,7 @@ package io.github.robertomike.super_controller.units
 
 import io.github.robertomike.super_controller.versioning.ApiVersionRequestCondition
 import io.github.robertomike.super_controller.versioning.VersionStrategy
-import io.github.robertomike.super_controller.versioning.VersioningConfig
+import io.github.robertomike.super_controller.versioning.VersioningProperties
 import jakarta.servlet.http.HttpServletRequest
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -15,7 +15,7 @@ class ApiVersionRequestConditionTest {
 
     @Test
     fun `should match request with URI strategy`() {
-        val config = VersioningConfig(strategy = VersionStrategy.URI)
+        val config = VersioningProperties(strategy = VersionStrategy.URI)
         val condition = ApiVersionRequestCondition("v1", config)
         val request = createRequest("/v1/users", null, null, null)
 
@@ -26,7 +26,7 @@ class ApiVersionRequestConditionTest {
 
     @Test
     fun `should not match request with different URI version`() {
-        val config = VersioningConfig(strategy = VersionStrategy.URI)
+        val config = VersioningProperties(strategy = VersionStrategy.URI)
         val condition = ApiVersionRequestCondition("v1", config)
         val request = createRequest("/v2/users", null, null, null)
 
@@ -37,7 +37,7 @@ class ApiVersionRequestConditionTest {
 
     @Test
     fun `should match request with HEADER strategy`() {
-        val config = VersioningConfig(
+        val config = VersioningProperties(
             strategy = VersionStrategy.HEADER,
             headerName = "X-API-Version"
         )
@@ -51,7 +51,7 @@ class ApiVersionRequestConditionTest {
 
     @Test
     fun `should not match request with different header version`() {
-        val config = VersioningConfig(
+        val config = VersioningProperties(
             strategy = VersionStrategy.HEADER,
             headerName = "X-API-Version"
         )
@@ -65,7 +65,7 @@ class ApiVersionRequestConditionTest {
 
     @Test
     fun `should match request with PARAMETER strategy`() {
-        val config = VersioningConfig(
+        val config = VersioningProperties(
             strategy = VersionStrategy.PARAMETER,
             paramName = "version"
         )
@@ -79,7 +79,7 @@ class ApiVersionRequestConditionTest {
 
     @Test
     fun `should not match request with different parameter version`() {
-        val config = VersioningConfig(
+        val config = VersioningProperties(
             strategy = VersionStrategy.PARAMETER,
             paramName = "version"
         )
@@ -93,7 +93,7 @@ class ApiVersionRequestConditionTest {
 
     @Test
     fun `should match request with ACCEPT_HEADER strategy`() {
-        val config = VersioningConfig(
+        val config = VersioningProperties(
             strategy = VersionStrategy.ACCEPT_HEADER,
             mediaTypePrefix = "application/vnd.api"
         )
@@ -107,7 +107,7 @@ class ApiVersionRequestConditionTest {
 
     @Test
     fun `should not match request with different accept header version`() {
-        val config = VersioningConfig(
+        val config = VersioningProperties(
             strategy = VersionStrategy.ACCEPT_HEADER,
             mediaTypePrefix = "application/vnd.api"
         )
@@ -121,7 +121,7 @@ class ApiVersionRequestConditionTest {
 
     @Test
     fun `should use default version when no version in request`() {
-        val config = VersioningConfig(
+        val config = VersioningProperties(
             strategy = VersionStrategy.HEADER,
             headerName = "X-API-Version",
             defaultVersion = "v1"
@@ -136,7 +136,7 @@ class ApiVersionRequestConditionTest {
 
     @Test
     fun `should combine conditions preferring one with version`() {
-        val config = VersioningConfig()
+        val config = VersioningProperties()
         val condition1 = ApiVersionRequestCondition("v1", config)
         val condition2 = ApiVersionRequestCondition("v2", config)
 
@@ -147,7 +147,7 @@ class ApiVersionRequestConditionTest {
 
     @Test
     fun `should compare conditions preferring ones with versions`() {
-        val config = VersioningConfig()
+        val config = VersioningProperties()
         val conditionWithVersion = ApiVersionRequestCondition("v1", config)
         val conditionWithoutVersion = ApiVersionRequestCondition("", config)
         val request = mock(HttpServletRequest::class.java)
@@ -159,7 +159,7 @@ class ApiVersionRequestConditionTest {
 
     @Test
     fun `should extract version from complex URI paths`() {
-        val config = VersioningConfig(strategy = VersionStrategy.URI)
+        val config = VersioningProperties(strategy = VersionStrategy.URI)
         val condition = ApiVersionRequestCondition("v2", config)
         val request = createRequest("/api/v2/users/123/orders", null, null, null)
 
@@ -170,7 +170,7 @@ class ApiVersionRequestConditionTest {
 
     @Test
     fun `should handle Accept header with multiple media types`() {
-        val config = VersioningConfig(
+        val config = VersioningProperties(
             strategy = VersionStrategy.ACCEPT_HEADER,
             mediaTypePrefix = "application/vnd.api"
         )

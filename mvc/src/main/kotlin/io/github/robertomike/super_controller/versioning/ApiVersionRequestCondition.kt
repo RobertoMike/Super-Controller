@@ -26,7 +26,7 @@ import org.springframework.web.servlet.mvc.condition.RequestCondition
  */
 class ApiVersionRequestCondition(
     private val version: String,
-    private val config: VersioningConfig
+    private val config: VersioningProperties
 ) : RequestCondition<ApiVersionRequestCondition> {
 
     /**

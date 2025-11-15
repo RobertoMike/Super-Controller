@@ -5,6 +5,7 @@ import io.github.robertomike.super_controller.controllers.SuperController
 import io.github.robertomike.super_controller.controllers.markers.BulkOperationsMarker
 import io.github.robertomike.super_controller.controllers.markers.SoftDeletableMarker
 import io.github.robertomike.super_controller.versioning.ApiVersion
+import io.github.robertomike.super_controller.versioning.VersioningProperties
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.Operation
 import io.swagger.v3.oas.models.PathItem
@@ -41,21 +42,12 @@ import org.springframework.context.annotation.Configuration
     havingValue = "true",
     matchIfMissing = false
 )
-open class OpenApiConfig {
-
-    /**
-     * Configuration properties bean for OpenAPI customization.
-     */
-    @Bean
-    open fun openApiProperties(): OpenApiProperties {
-        return OpenApiProperties()
-    }
-
+open class OpenApiConfig(val properties: OpenApiProperties, val versionProperties: VersioningProperties?) {
     /**
      * Creates the base OpenAPI configuration.
      */
     @Bean
-    open fun customOpenAPI(properties: OpenApiProperties): OpenAPI {
+    open fun customOpenAPI(): OpenAPI {
         return OpenAPI()
             .info(
                 Info()
@@ -315,7 +307,7 @@ open class OpenApiConfig {
      * Prefixes an operation ID with the API version if present.
      */
     private fun prefixWithVersion(operationId: String, apiVersion: ApiVersion?): String {
-        return if (apiVersion != null) {
+        return if (apiVersion != null && versionProperties?.enabled ?: false) {
             "${apiVersion.value}_$operationId"
         } else {
             operationId

@@ -2,7 +2,7 @@ package io.github.robertomike.super_controller.units
 
 import io.github.robertomike.super_controller.versioning.ApiVersion
 import io.github.robertomike.super_controller.versioning.ApiVersionInterceptor
-import io.github.robertomike.super_controller.versioning.VersioningConfig
+import io.github.robertomike.super_controller.versioning.VersioningProperties
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.junit.jupiter.api.BeforeEach
@@ -13,14 +13,14 @@ import kotlin.test.assertTrue
 
 class ApiVersionInterceptorTest {
 
-    private lateinit var config: VersioningConfig
+    private lateinit var config: VersioningProperties
     private lateinit var interceptor: ApiVersionInterceptor
     private lateinit var request: HttpServletRequest
     private lateinit var response: HttpServletResponse
 
     @BeforeEach
     fun setup() {
-        config = VersioningConfig(addDeprecationHeaders = true)
+        config = VersioningProperties(addDeprecationHeaders = true)
         interceptor = ApiVersionInterceptor(config)
         request = mock(HttpServletRequest::class.java)
         response = mock(HttpServletResponse::class.java)
