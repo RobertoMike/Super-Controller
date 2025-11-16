@@ -48,7 +48,14 @@ class BaseRouterTest {
         val controller = TestController()
         val registeredUrls = mutableListOf<UrlRegistration>()
         val router = object : BaseRouter<TestController>(listOf(controller)) {
-            override fun registerUrl(controller: Any, method: String, url: String, httpMethod: RequestMethod) {
+            override fun registerUrl(
+                controller: Any,
+                method: String,
+                url: String,
+                httpMethod: RequestMethod,
+                headers: Array<String>,
+                params: Array<String>
+            ) {
                 registeredUrls.add(UrlRegistration(method, url, httpMethod))
             }
         }
@@ -68,7 +75,14 @@ class BaseRouterTest {
         val controller = TestController()
         val registeredUrls = mutableListOf<UrlRegistration>()
         val router = object : BaseRouter<TestController>(listOf(controller)) {
-            override fun registerUrl(controller: Any, method: String, url: String, httpMethod: RequestMethod) {
+            override fun registerUrl(
+                controller: Any,
+                method: String,
+                url: String,
+                httpMethod: RequestMethod,
+                headers: Array<String>,
+                params: Array<String>
+            ) {
                 registeredUrls.add(UrlRegistration(method, url, httpMethod))
             }
         }
@@ -84,7 +98,14 @@ class BaseRouterTest {
         val controller = TestController()
         val registeredUrls = mutableListOf<UrlRegistration>()
         val router = object : BaseRouter<TestController>(listOf(controller)) {
-            override fun registerUrl(controller: Any, method: String, url: String, httpMethod: RequestMethod) {
+            override fun registerUrl(
+                controller: Any,
+                method: String,
+                url: String,
+                httpMethod: RequestMethod,
+                headers: Array<String>,
+                params: Array<String>
+            ) {
                 registeredUrls.add(UrlRegistration(method, url, httpMethod))
             }
         }
@@ -101,7 +122,14 @@ class BaseRouterTest {
         val controller = TestBulkController()
         val registeredUrls = mutableListOf<UrlRegistration>()
         val router = object : BaseRouter<CrudController<*, *, *, *, *, *>>(listOf(controller)) {
-            override fun registerUrl(controller: Any, method: String, url: String, httpMethod: RequestMethod) {
+            override fun registerUrl(
+                controller: Any,
+                method: String,
+                url: String,
+                httpMethod: RequestMethod,
+                headers: Array<String>,
+                params: Array<String>
+            ) {
                 registeredUrls.add(UrlRegistration(method, url, httpMethod))
             }
         }
@@ -119,7 +147,14 @@ class BaseRouterTest {
         val controller = TestSoftDeleteController()
         val registeredUrls = mutableListOf<UrlRegistration>()
         val router = object : BaseRouter<CrudController<*, *, *, *, *, *>>(listOf(controller)) {
-            override fun registerUrl(controller: Any, method: String, url: String, httpMethod: RequestMethod) {
+            override fun registerUrl(
+                controller: Any,
+                method: String,
+                url: String,
+                httpMethod: RequestMethod,
+                headers: Array<String>,
+                params: Array<String>
+            ) {
                 registeredUrls.add(UrlRegistration(method, url, httpMethod))
             }
         }
@@ -138,7 +173,14 @@ class BaseRouterTest {
         val controller2 = TestController()
         val registeredUrls = mutableListOf<UrlRegistration>()
         val router = object : BaseRouter<TestController>(listOf(controller1, controller2)) {
-            override fun registerUrl(controller: Any, method: String, url: String, httpMethod: RequestMethod) {
+            override fun registerUrl(
+                controller: Any,
+                method: String,
+                url: String,
+                httpMethod: RequestMethod,
+                headers: Array<String>,
+                params: Array<String>
+            ) {
                 registeredUrls.add(UrlRegistration(method, url, httpMethod))
             }
         }
@@ -153,7 +195,14 @@ class BaseRouterTest {
     private data class UrlRegistration(val method: String, val url: String, val httpMethod: RequestMethod)
 
     private class TestRouterImpl(controllers: List<TestController>) : BaseRouter<TestController>(controllers) {
-        override fun registerUrl(controller: Any, method: String, url: String, httpMethod: RequestMethod) {
+        override fun registerUrl(
+            controller: Any,
+            method: String,
+            url: String,
+            httpMethod: RequestMethod,
+            headers: Array<String>,
+            params: Array<String>
+        ) {
             // No-op for testing
         }
     }

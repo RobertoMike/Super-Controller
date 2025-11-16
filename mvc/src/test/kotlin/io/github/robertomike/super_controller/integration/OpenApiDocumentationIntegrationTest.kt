@@ -163,7 +163,7 @@ class OpenApiDocumentationIntegrationTest : BasicTest() {
         assertNotNull(sortParam, "Sort parameter should exist")
         assertEquals("query", sortParam.path("in").asText())
         assertTrue(
-            sortParam.path("description").asText().contains("property(,asc|desc)"),
+            sortParam.path("description").asText().contains("(-)property"),
             "Sort description should explain format"
         )
     }

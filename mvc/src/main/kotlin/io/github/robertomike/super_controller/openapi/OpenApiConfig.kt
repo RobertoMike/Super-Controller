@@ -5,6 +5,7 @@ import io.github.robertomike.super_controller.controllers.SuperController
 import io.github.robertomike.super_controller.controllers.markers.BulkOperationsMarker
 import io.github.robertomike.super_controller.controllers.markers.SoftDeletableMarker
 import io.github.robertomike.super_controller.versioning.ApiVersion
+import io.github.robertomike.super_controller.versioning.VersionStrategy
 import io.github.robertomike.super_controller.versioning.VersioningProperties
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.Operation
@@ -128,6 +129,7 @@ open class OpenApiConfig(val properties: OpenApiProperties, val versionPropertie
         indexOperation.tags = tags
         indexOperation.operationId = prefixWithVersion("index${resourceName.replaceFirstChar { it.uppercase() }}", apiVersion)
         addPaginationParameters(indexOperation)
+        addVersioningStrategy(indexOperation)
         markDeprecatedIfNeeded(indexOperation, apiVersion)
 
         // Store operation (POST /resource)
@@ -137,6 +139,7 @@ open class OpenApiConfig(val properties: OpenApiProperties, val versionPropertie
         storeOperation.description = "Create a new $singularName"
         storeOperation.tags = tags
         storeOperation.operationId = prefixWithVersion("create${singularName.replaceFirstChar { it.uppercase() }}", apiVersion)
+        addVersioningStrategy(storeOperation)
         markDeprecatedIfNeeded(storeOperation, apiVersion)
 
         // Show operation (GET /resource/{id})
@@ -146,6 +149,7 @@ open class OpenApiConfig(val properties: OpenApiProperties, val versionPropertie
         showOperation.description = "Retrieve a single $singularName by ID"
         showOperation.tags = tags
         showOperation.operationId = prefixWithVersion("get${singularName.replaceFirstChar { it.uppercase() }}", apiVersion)
+        addVersioningStrategy(showOperation)
         markDeprecatedIfNeeded(showOperation, apiVersion)
 
         // Update operation (PUT /resource/{id})
@@ -155,6 +159,7 @@ open class OpenApiConfig(val properties: OpenApiProperties, val versionPropertie
         updateOperation.description = "Update an existing $singularName"
         updateOperation.tags = tags
         updateOperation.operationId = prefixWithVersion("update${singularName.replaceFirstChar { it.uppercase() }}", apiVersion)
+        addVersioningStrategy(updateOperation)
         markDeprecatedIfNeeded(updateOperation, apiVersion)
 
         // Delete operation (DELETE /resource/{id})
@@ -164,6 +169,7 @@ open class OpenApiConfig(val properties: OpenApiProperties, val versionPropertie
         deleteOperation.description = "Delete a $singularName by ID"
         deleteOperation.tags = tags
         deleteOperation.operationId = prefixWithVersion("delete${singularName.replaceFirstChar { it.uppercase() }}", apiVersion)
+        addVersioningStrategy(deleteOperation)
         markDeprecatedIfNeeded(deleteOperation, apiVersion)
     }
 
@@ -186,6 +192,7 @@ open class OpenApiConfig(val properties: OpenApiProperties, val versionPropertie
         bulkCreateOperation.description = "Create multiple ${singularName}s in a single request"
         bulkCreateOperation.tags = tags
         bulkCreateOperation.operationId = prefixWithVersion("bulkCreate${singularName.replaceFirstChar { it.uppercase() }}", apiVersion)
+        addVersioningStrategy(bulkCreateOperation)
         markDeprecatedIfNeeded(bulkCreateOperation, apiVersion)
 
         // Bulk update (PUT /resource/bulk)
@@ -195,6 +202,7 @@ open class OpenApiConfig(val properties: OpenApiProperties, val versionPropertie
         bulkUpdateOperation.description = "Update multiple ${singularName}s in a single request"
         bulkUpdateOperation.tags = tags
         bulkUpdateOperation.operationId = prefixWithVersion("bulkUpdate${singularName.replaceFirstChar { it.uppercase() }}", apiVersion)
+        addVersioningStrategy(bulkUpdateOperation)
         markDeprecatedIfNeeded(bulkUpdateOperation, apiVersion)
 
         // Bulk delete (DELETE /resource/bulk)
@@ -204,6 +212,7 @@ open class OpenApiConfig(val properties: OpenApiProperties, val versionPropertie
         bulkDeleteOperation.description = "Delete multiple ${singularName}s in a single request"
         bulkDeleteOperation.tags = tags
         bulkDeleteOperation.operationId = prefixWithVersion("bulkDelete${singularName.replaceFirstChar { it.uppercase() }}", apiVersion)
+        addVersioningStrategy(bulkDeleteOperation)
         markDeprecatedIfNeeded(bulkDeleteOperation, apiVersion)
     }
 
@@ -226,6 +235,7 @@ open class OpenApiConfig(val properties: OpenApiProperties, val versionPropertie
         softDeleteOperation.description = "Soft delete a $singularName (can be restored later)"
         softDeleteOperation.tags = tags
         softDeleteOperation.operationId = prefixWithVersion("softDelete${singularName.replaceFirstChar { it.uppercase() }}", apiVersion)
+        addVersioningStrategy(softDeleteOperation)
         markDeprecatedIfNeeded(softDeleteOperation, apiVersion)
 
         // Restore (PUT /resource/{id}/restore)
@@ -235,6 +245,7 @@ open class OpenApiConfig(val properties: OpenApiProperties, val versionPropertie
         restoreOperation.description = "Restore a soft-deleted $singularName"
         restoreOperation.tags = tags
         restoreOperation.operationId = prefixWithVersion("restore${singularName.replaceFirstChar { it.uppercase() }}", apiVersion)
+        addVersioningStrategy(restoreOperation)
         markDeprecatedIfNeeded(restoreOperation, apiVersion)
 
         // Force delete (DELETE /resource/{id}/force)
@@ -244,6 +255,7 @@ open class OpenApiConfig(val properties: OpenApiProperties, val versionPropertie
         forceDeleteOperation.description = "Permanently delete a $singularName (cannot be undone)"
         forceDeleteOperation.tags = tags
         forceDeleteOperation.operationId = prefixWithVersion("forceDelete${singularName.replaceFirstChar { it.uppercase() }}", apiVersion)
+        addVersioningStrategy(forceDeleteOperation)
         markDeprecatedIfNeeded(forceDeleteOperation, apiVersion)
     }
 
@@ -296,10 +308,68 @@ open class OpenApiConfig(val properties: OpenApiProperties, val versionPropertie
                 Parameter()
                     .name("sort")
                     .`in`("query")
-                    .description("Sort criteria in the format: property(,asc|desc). Default sort order is ascending.")
+                    .description("Sort criteria in the format: (-)property. Default sort order is ascending.")
                     .required(false)
                     .schema(sortSchema)
             )
+        }
+    }
+
+    /**
+     * Adds versioning parameters based on the configured strategy.
+     */
+    private fun addVersioningStrategy(operation: Operation) {
+        if (versionProperties?.enabled != true) return
+        
+        if (operation.parameters == null) {
+            operation.parameters = mutableListOf()
+        }
+
+        val existingParamNames = operation.parameters.map { it.name }.toSet()
+
+        when (versionProperties.strategy) {
+            VersionStrategy.HEADER -> {
+                if (versionProperties.headerName !in existingParamNames) {
+                    val versionSchema = Schema<String>()
+                    versionSchema.setType("string")
+                    versionSchema.setDefault(versionProperties.defaultVersion)
+
+                    operation.addParametersItem(
+                        Parameter()
+                            .name(versionProperties.headerName)
+                            .`in`("header")
+                            .description("API version to use for this request")
+                            .required(false)
+                            .schema(versionSchema)
+                    )
+                }
+            }
+            VersionStrategy.PARAMETER -> {
+                if (versionProperties.paramName !in existingParamNames) {
+                    val versionSchema = Schema<String>()
+                    versionSchema.setType("string")
+                    versionSchema.setDefault(versionProperties.defaultVersion)
+
+                    operation.addParametersItem(
+                        Parameter()
+                            .name(versionProperties.paramName)
+                            .`in`("query")
+                            .description("API version to use for this request")
+                            .required(false)
+                            .schema(versionSchema)
+                    )
+                }
+            }
+            VersionStrategy.ACCEPT_HEADER -> {
+                // Accept header documentation is handled by adding it to the description
+                if (operation.description?.contains("Accept header") != true) {
+                    val acceptExample = "${versionProperties.mediaTypePrefix}.${versionProperties.defaultVersion}+json"
+                    val versionNote = "\n\nVersion can be specified in Accept header: `$acceptExample`"
+                    operation.description = (operation.description ?: "") + versionNote
+                }
+            }
+            VersionStrategy.URI -> {
+            }
         }
     }
 
