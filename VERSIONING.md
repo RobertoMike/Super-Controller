@@ -27,15 +27,18 @@ Super-Controller provides comprehensive API versioning support with multiple str
 Add to your `application.properties` or `application.yml`:
 
 ```properties
+## obligatory
 super-controller.versioning.enabled=true
+## default
 super-controller.versioning.strategy=URI
+## default
 super-controller.versioning.default-version=v1
 ```
 
 ### 2. Annotate Your Controllers
 
 ```kotlin
-@ApiVersion("v1")
+@ApiVersion()
 @RestController
 class UserControllerV1(
     userService: UserService,
@@ -47,10 +50,10 @@ class UserControllerV1(
 
 Based on your chosen strategy:
 
-- **URI**: `GET /v1/api/users`
-- **HEADER**: `GET /api/users` with header `X-API-Version: v1`
-- **PARAMETER**: `GET /api/users?version=v1`
-- **ACCEPT_HEADER**: `GET /api/users` with header `Accept: application/vnd.api.v1+json`
+- **URI**: `GET /api/V1/users`
+- **HEADER**: `GET /api/users` with header `X-API-Version: V1`
+- **PARAMETER**: `GET /api/users?version=V1`
+- **ACCEPT_HEADER**: `GET /api/users` with header `Accept: application/vnd.api.V1+json`
 
 ## Versioning Strategies
 
@@ -80,10 +83,10 @@ class UserControllerV2 : SuperController<...>()
 
 ```bash
 # Version 1
-GET /v1/api/users
+GET /api/V1/users
 
 # Version 2
-GET /v2/api/users
+GET /api/V2/users
 ```
 
 **Pros:**
@@ -120,7 +123,7 @@ class UserControllerV1 : SuperController<...>()
 
 ```bash
 GET /api/users
-X-API-Version: v1
+X-API-Version: V1
 ```
 
 **Pros:**
@@ -156,7 +159,7 @@ class UserControllerV1 : SuperController<...>()
 **Requests:**
 
 ```bash
-GET /api/users?version=v1
+GET /api/users?version=V1
 ```
 
 **Pros:**
@@ -193,7 +196,7 @@ class UserControllerV1 : SuperController<...>()
 
 ```bash
 GET /api/users
-Accept: application/vnd.api.v1+json
+Accept: application/vnd.api.V1+json
 ```
 
 **Pros:**
@@ -262,8 +265,6 @@ class UserControllerV2(
     userService: UserServiceV2,
     override val mapper: UserResponseMapperV2
 ) : SuperController<User, Long, StoreUserRequestV2, UpdateUserRequestV2>(userService) {
-
-    @PostMapping("/bulk-import")
     fun bulkImport(@RequestBody users: List<StoreUserRequestV2>): ResponseEntity<List<User>> {
         // New feature in v2
         return ResponseEntity.ok(userService.bulkImport(users))
@@ -320,20 +321,20 @@ class UserVersioningTest : BasicTest() {
     fun `should route to v1 with version header`() {
         mockMvc.perform(
             get("/api/users")
-                .header("X-API-Version", "v1")
+                .header("X-API-Version", "V1")
         )
             .andExpect(status().isOk)
-            .andExpect(header().string("X-API-Version", "v1"))
+            .andExpect(header().string("X-API-Version", "V1"))
     }
 
     @Test
     fun `should route to v2 with version header`() {
         mockMvc.perform(
             get("/api/users")
-                .header("X-API-Version", "v2")
+                .header("X-API-Version", "V2")
         )
             .andExpect(status().isOk)
-            .andExpect(header().string("X-API-Version", "v2"))
+            .andExpect(header().string("X-API-Version", "V2"))
     }
 }
 ```
@@ -448,7 +449,7 @@ class UserControllerV1 : SuperController<...>()
 
 The `ControllerUtil.baseUrl` property automatically adapts based on versioning strategy:
 
-- **URI Strategy**: `baseUrl` includes version → `/v1/api/users`
+- **URI Strategy**: `baseUrl` includes version → `/api/V1/users`
 - **Other Strategies**: `baseUrl` excludes version → `/api/users`
 
 This ensures generated URLs (like in HATEOAS links) are correct for each strategy.
@@ -501,7 +502,7 @@ class UserControllerV2 : SuperController<...>()
 
 ### Version Not in URL
 
-**Problem**: Expected `/v1/api/users` but got `/api/users`
+**Problem**: Expected `/api/V1/users` but got `/api/users`
 
 **Solution**: Check that strategy is set to URI
 
@@ -521,7 +522,7 @@ super-controller.versioning.header-name=X-API-Version
 
 ```bash
 # Must match header name
-curl -H "X-API-Version: v1" http://localhost:8080/api/users
+curl -H "X-API-Version: V1" http://localhost:8080/api/users
 ```
 
 ## Migration Guide
@@ -575,10 +576,3 @@ super-controller.versioning.add-deprecation-headers=true
 4. **Notify clients**: Give migration timeline
 
 5. **Remove v1**: After migration period, remove deprecated version
-
-## See Also
-
-- [ApiVersion Annotation](../src/main/kotlin/io/github/robertomike/super_controller/versioning/ApiVersion.kt)
-- [VersioningConfig](../src/main/kotlin/io/github/robertomike/super_controller/versioning/VersioningConfig.kt)
-- [ApiVersionRequestCondition](../src/main/kotlin/io/github/robertomike/super_controller/versioning/ApiVersionRequestCondition.kt)
-- [Integration Tests](../mvc/src/test/kotlin/io/github/robertomike/super_controller/integration/VersioningStrategiesIntegrationTest.kt)

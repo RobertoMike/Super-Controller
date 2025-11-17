@@ -1,6 +1,6 @@
 # Super-Controller
 
-A comprehensive Kotlin library for Spring Boot that eliminates boilerplate code and accelerates API development with automatic CRUD operations, API versioning, caching, bulk operations, and more.
+A comprehensive Kotlin library for Spring Boot that eliminates boilerplate code and accelerates API development with automatic CRUD operations, API versioning, bulk operations, and more.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE.txt)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0-purple.svg)](https://kotlinlang.org)
@@ -12,7 +12,6 @@ A comprehensive Kotlin library for Spring Boot that eliminates boilerplate code 
 - 📚 **API Versioning** - 4 strategies: URI, Header, Parameter, Accept-Header
 - 🗑️ **Soft Delete** - Mark records as deleted without losing data
 - ⚡ **Bulk Operations** - Create, update, delete multiple records at once
-- 💾 **Automatic Caching** - Built-in caching with configurable strategies
 - 📖 **OpenAPI Documentation** - Automatic Swagger/OpenAPI 3.0 generation
 - 🔒 **Policy-Based Authorization** - Flexible, reusable authorization rules
 - 📄 **Pagination & Sorting** - Built-in support for large datasets
@@ -134,10 +133,10 @@ class UserControllerV2 : SuperController<...>()
 
 **4 Strategies:**
 
-- **URI**: `/v1/api/users`, `/v2/api/users`
-- **Header**: `X-API-Version: v1`
-- **Parameter**: `/api/users?version=v1`
-- **Accept-Header**: `Accept: application/vnd.api.v1+json`
+- **URI**: `/api/V1/users`, `/api/V2/users`
+- **Header**: `X-API-Version: V1`
+- **Parameter**: `/api/users?version=V1`
+- **Accept-Header**: `Accept: application/vnd.api.V1+json`
 
 ### Soft Delete
 
@@ -171,16 +170,6 @@ class UserController : SuperController<...>,
 - `PUT /users/bulk` - Update multiple
 - `DELETE /users/bulk` - Delete multiple
 
-### Automatic Caching
-
-```properties
-super-controller.cache.enabled=true
-super-controller.cache.strategy=SIMPLE
-super-controller.cache.ttl=3600
-```
-
-Cache automatically invalidates on create/update/delete operations.
-
 ### OpenAPI Documentation
 
 Automatic Swagger UI generation:
@@ -201,10 +190,6 @@ Access at: `http://localhost:8080/swagger-ui.html`
 super-controller.versioning.enabled=true
 super-controller.versioning.strategy=URI
 super-controller.versioning.default-version=v1
-
-# Caching
-super-controller.cache.enabled=true
-super-controller.cache.strategy=SIMPLE
 
 # OpenAPI
 super-controller.openapi.enabled=true
@@ -255,24 +240,24 @@ class UserController(
 
 ```
 # CRUD
-GET    /v1/api/users
-POST   /v1/api/users
-GET    /v1/api/users/{id}
-PUT    /v1/api/users/{id}
-DELETE /v1/api/users/{id}
+GET    /api/V1/users
+POST   /api/V1/users
+GET    /api/V1/users/{id}
+PUT    /api/V1/users/{id}
+DELETE /api/V1/users/{id}
 
 # Bulk
-POST   /v1/api/users/bulk
-PUT    /v1/api/users/bulk
-DELETE /v1/api/users/bulk
+POST   /api/V1/users/bulk
+PUT    /api/V1/users/bulk
+DELETE /api/V1/users/bulk
 
 # Soft Delete
-DELETE /v1/api/users/{id}/soft-delete
-PUT    /v1/api/users/{id}/restore
-DELETE /v1/api/users/{id}/force
+DELETE /api/V1/users/{id}/soft-delete
+PUT    /api/V1/users/{id}/restore
+DELETE /api/V1/users/{id}/force
 
 # Custom
-GET    /v1/api/users/active
+GET    /api/V1/users/active
 ```
 
 More examples in [DOCUMENTATION.md](DOCUMENTATION.md#examples)

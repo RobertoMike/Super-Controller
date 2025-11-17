@@ -241,8 +241,8 @@ class UserControllerV2(
 **Requests:**
 
 ```bash
-GET /v1/api/users  # Routes to UserControllerV1
-GET /v2/api/users  # Routes to UserControllerV2
+GET /api/V1/users  # Routes to UserControllerV1
+GET /api/V2/users  # Routes to UserControllerV2
 ```
 
 #### 2. Header Strategy
@@ -462,58 +462,158 @@ Content-Type: application/json
 
 ### Caching
 
-Automatic caching with multiple strategies.
+SuperController provides **automatic caching** for service layer operations through the `@SuperCache` annotation and AOP (Aspect-Oriented Programming).
+
+#### How It Works
+
+SuperController uses AspectJ to intercept service method calls and automatically cache results. The caching is applied at the **service layer**, not the controller layer, making it work seamlessly with the programmatically registered CRUD endpoints.
+
+**Key Components:**
+
+1. **`@SuperCache` Annotation**: Applied to service classes to enable automatic caching
+2. **`CacheAspect`**: AOP aspect that intercepts service methods and manages cache operations
+3. **Cache Keys**: Automatically generated based on entity IDs and method parameters
+
+#### Cache Key Format
+
+Cache keys follow the pattern: `{prefix}:{key}`
+
+- **prefix**: Either the custom prefix from `@SuperCache` or the service class name
+- **key**: The entity ID or a generated key from method parameters
+
+**Examples:**
+
+- Single entity: `UserService:123` (user with ID 123)
+- Index/list: `UserService:page=0_size=10_sort=name` (paginated list with parameters)
 
 #### Enable Caching
 
-**Configuration:**
+**1. Add Spring Boot Cache dependency:**
 
-```properties
-super-controller.cache.enabled=true
-super-controller.cache.strategy=SIMPLE
-super-controller.cache.ttl=3600
+```gradle
+implementation("org.springframework.boot:spring-boot-starter-cache")
 ```
 
-**Strategies:**
+**2. Enable caching in your application:**
 
-- `SIMPLE`: Cache all methods
-- `INDEX_ONLY`: Only cache list endpoint
-- `SHOW_ONLY`: Only cache single item endpoint
-- `CUSTOM`: Define custom caching rules
+```kotlin
+@SpringBootApplication
+@EnableCaching
+class Application
+```
+
+**3. Configure cache provider (optional):**
+
+```properties
+# Simple in-memory cache (default)
+spring.cache.type=simple
+
+# Or use Redis, Caffeine, etc.
+spring.cache.type=redis
+spring.data.redis.host=localhost
+spring.data.redis.port=6379
+```
 
 #### Usage
 
-**1. Enable cache on controller:**
-
-```kotlin
-@RestController
-class UserController(
-    userService: UserService,
-    override val mapper: UserResponseMapper
-) : SuperController<User, Long, StoreUserRequest, UpdateUserRequest>(userService) {
-
-    init {
-        // Cache will be auto-configured
-    }
-}
-```
-
-**2. Service with repository support:**
+**Apply `@SuperCache` to your service:**
 
 ```kotlin
 @Service
+@SuperCache(
+    value = "users",              // Cache name (required)
+    prefix = "user",              // Cache key prefix (optional, defaults to class name)
+    saveIndex = true,             // Cache index/list results (default: true)
+    saveSingle = true,            // Cache single entity results (default: true)
+    saveOnStore = false           // Cache newly created entities (default: false)
+)
 class UserService(
-    repository: UserRepository
+    override val repository: UserRepository
 ) : SuperService<User, Long>(repository)
 ```
 
-**3. Cache automatically invalidates on:**
+**That's it!** The caching is now automatic for all CRUD operations:
 
-- Create → Evicts index cache
-- Update → Evicts specific item and index cache
-- Delete → Evicts specific item and index cache
+- **`index()`** → Cached with parameter-based key (if `saveIndex = true`)
+- **`findById()`** → Cached with entity ID (if `saveSingle = true`)
+- **`store()`** → Optionally cached (if `saveOnStore = true`)
+- **`update()`** → Updates cache automatically
+- **`delete()`** → Evicts from cache automatically
 
-#### Custom Cache Keys
+#### Configuration Options
+
+```kotlin
+@SuperCache(
+    value = "users",          // Required: Cache name for Spring CacheManager
+    prefix = "user",          // Optional: Custom prefix for cache keys (defaults to class name)
+    saveIndex = true,         // Cache paginated list results (default: true)
+    saveSingle = true,        // Cache single entity lookups (default: true)
+    saveOnStore = false       // Cache entities on creation (default: false, to avoid stale data)
+)
+```
+
+**When to use `saveOnStore = true`:**
+
+- Read-heavy applications where new entities are frequently queried immediately after creation
+- When you control the entire entity lifecycle
+
+**When to keep `saveOnStore = false` (default):**
+
+- Write-heavy applications
+- When external systems might modify entities after creation
+- To prevent stale cached data
+
+#### Automatic Cache Invalidation
+
+The cache is automatically managed for all operations:
+
+| Operation               | Cache Behavior                                           |
+| ----------------------- | -------------------------------------------------------- |
+| **Create** (`store()`)  | Optionally caches the new entity if `saveOnStore = true` |
+| **Read** (`findById()`) | Caches the result if `saveSingle = true`                 |
+| **Update** (`update()`) | Updates the cached entity                                |
+| **Delete** (`delete()`) | Evicts the entity from cache                             |
+| **Index** (`index()`)   | Caches paginated results if `saveIndex = true`           |
+
+#### Bulk Operations Support
+
+Caching also works with bulk operations:
+
+```kotlin
+@Service
+@SuperCache(value = "users", prefix = "user")
+class UserService(
+    override val repository: UserRepository
+) : SuperService<User, Long>(repository), BulkOperations<User, Long, StoreUserRequest, UpdateUserRequest>
+```
+
+**Bulk caching behavior:**
+
+- **`bulkStore()`** → Caches successful entities if `saveOnStore = true`
+- **`bulkUpdate()`** → Updates cache for all successful entities
+- **`bulkDelete()`** → Evicts all successfully deleted entities from cache
+
+#### Soft Delete Support
+
+Caching works seamlessly with soft delete:
+
+```kotlin
+@Service
+@SuperCache(value = "users", prefix = "user")
+class UserService(
+    override val repository: UserRepository
+) : SuperService<User, Long>(repository), SoftDeletableService<User, Long>
+```
+
+**Soft delete caching behavior:**
+
+- **`softDelete()`** → Evicts entity from cache
+- **`restore()`** → Caches the restored entity if `saveSingle = true`
+- **`forceDelete()`** → Evicts entity from cache permanently
+
+#### Custom Endpoints with Caching
+
+For custom endpoints, you can still use Spring's standard caching annotations:
 
 ```kotlin
 @RestController
@@ -522,19 +622,110 @@ class UserController(
     override val mapper: UserResponseMapper
 ) : SuperController<User, Long, StoreUserRequest, UpdateUserRequest>(userService) {
 
+    // Cache active users list
     @Cacheable("users:active")
     @GetMapping("/users/active")
     fun getActiveUsers(): List<User> {
         return service.findByActive(true)
     }
 
-    @CacheEvict("users:active", allEntries = true)
-    @PostMapping("/users/activate/{id}")
-    fun activateUser(@PathVariable id: Long) {
-        service.activate(id)
+    // Evict cache when activating a user
+    @CacheEvict(value = ["users:active"], allEntries = true)
+    @PutMapping("/users/activate/{id}")
+    fun activateUser(@PathVariable id: Long): User {
+        return service.activate(id)
+    }
+
+    // Cache with custom key
+    @Cacheable(value = ["users:stats"], key = "#userId")
+    @GetMapping("/users/{userId}/stats")
+    fun getUserStats(@PathVariable userId: Long): UserStats {
+        return service.calculateStats(userId)
     }
 }
 ```
+
+#### Advanced: Cache Manager Configuration
+
+Configure cache behavior globally:
+
+```kotlin
+@Configuration
+@EnableCaching
+class CacheConfig {
+
+    @Bean
+    fun cacheManager(): CacheManager {
+        return CaffeineCacheManager().apply {
+            setCaffeine(
+                Caffeine.newBuilder()
+                    .expireAfterWrite(1, TimeUnit.HOURS)
+                    .maximumSize(1000)
+            )
+        }
+    }
+}
+```
+
+**Or with Redis:**
+
+```kotlin
+@Configuration
+@EnableCaching
+class CacheConfig {
+
+    @Bean
+    fun cacheManager(connectionFactory: RedisConnectionFactory): CacheManager {
+        val config = RedisCacheConfiguration.defaultCacheConfig()
+            .entryTtl(Duration.ofHours(1))
+            .serializeValuesWith(
+                RedisSerializationContext.SerializationPair.fromSerializer(
+                    GenericJackson2JsonRedisSerializer()
+                )
+            )
+
+        return RedisCacheManager.builder(connectionFactory)
+            .cacheDefaults(config)
+            .build()
+    }
+}
+```
+
+#### Example: Complete Cached Service
+
+```kotlin
+@Service
+@SuperCache(
+    value = "products",
+    prefix = "product",
+    saveIndex = true,
+    saveSingle = true,
+    saveOnStore = false
+)
+class ProductService(
+    override val repository: ProductRepository
+) : SuperService<Product, Long>(repository),
+    BulkOperations<Product, Long, StoreProductRequest, UpdateProductRequest>,
+    SoftDeletableService<Product, Long> {
+
+    // All CRUD operations are automatically cached:
+    // - index() → Cached with pagination params
+    // - findById() → Cached with product ID
+    // - store() → Not cached (saveOnStore = false)
+    // - update() → Updates cache
+    // - delete() → Evicts from cache
+    // - bulkStore/Update/Delete() → Cached accordingly
+    // - softDelete/restore/forceDelete() → Cache managed automatically
+}
+```
+
+**Cache keys generated:**
+
+- `product:123` → Product with ID 123
+- `product:page=0_size=10` → First page of products
+- `product:page=0_size=10_category=electronics` → Filtered results
+
+````
 
 ---
 
@@ -553,7 +744,7 @@ super-controller.openapi.description=API Documentation
 super-controller.openapi.version=1.0.0
 super-controller.openapi.servers[0].url=https://api.example.com
 super-controller.openapi.servers[0].description=Production
-```
+````
 
 #### Features
 
@@ -873,24 +1064,24 @@ class UserController(
 
 ```
 # CRUD
-GET    /v1/api/users              # List users (paginated)
-GET    /v1/api/users/{id}         # Get user
-POST   /v1/api/users              # Create user
-PUT    /v1/api/users/{id}         # Update user
-DELETE /v1/api/users/{id}         # Delete user
+GET    /api/V1/users              # List users (paginated)
+GET    /api/V1/users/{id}         # Get user
+POST   /api/V1/users              # Create user
+PUT    /api/V1/users/{id}         # Update user
+DELETE /api/V1/users/{id}         # Delete user
 
 # Bulk Operations
-POST   /v1/api/users/bulk         # Create multiple users
-PUT    /v1/api/users/bulk         # Update multiple users
-DELETE /v1/api/users/bulk         # Delete multiple users
+POST   /api/V1/users/bulk         # Create multiple users
+PUT    /api/V1/users/bulk         # Update multiple users
+DELETE /api/V1/users/bulk         # Delete multiple users
 
 # Soft Delete
-DELETE /v1/api/users/{id}/soft-delete  # Soft delete
-PUT    /v1/api/users/{id}/restore      # Restore
-DELETE /v1/api/users/{id}/force        # Force delete
+DELETE /api/V1/users/{id}/soft-delete  # Soft delete
+PUT    /api/V1/users/{id}/restore      # Restore
+DELETE /api/V1/users/{id}/force        # Force delete
 
 # Custom
-GET    /v1/api/users/active       # Get active users
+GET    /api/V1/users/active       # Get active users
 ```
 
 ---
@@ -1030,7 +1221,7 @@ class UserControllerTest {
 
     @Test
     fun `should list users`() {
-        mockMvc.perform(get("/v1/api/users"))
+        mockMvc.perform(get("/api/V1/users"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.content").isArray)
     }
@@ -1045,7 +1236,7 @@ class UserControllerTest {
         """
 
         mockMvc.perform(
-            post("/v1/api/users")
+            post("/api/V1/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(request)
         )
