@@ -1,7 +1,8 @@
 package io.github.robertomike.super_controller.services
 
-import io.github.robertomike.baradum.Baradum
-import io.github.robertomike.baradum.filters.Filter
+import io.github.robertomike.baradum.core.Baradum
+import io.github.robertomike.baradum.core.filters.Filter
+import io.github.robertomike.baradum.hefesto.HefestoQueryBuilder
 import io.github.robertomike.hefesto.actions.JoinFetch
 import io.github.robertomike.hefesto.models.BaseModel
 import io.github.robertomike.super_controller.requests.Request
@@ -18,7 +19,7 @@ import org.springframework.data.domain.PageRequest
  * @param M The type of the model being managed by this service.
  * @param ID The type of the ID of the model being managed by this service.
  */
-abstract class SuperServiceWithFilters<M : BaseModel, ID, SR: Request, UR: Request> : SuperService<M, ID, SR, UR>() {
+abstract class SuperServiceWithFilters<M : BaseModel, ID, SR : Request, UR : Request> : SuperService<M, ID, SR, UR>() {
     /**
      * Returns a list of filters to be applied to the service's queries.
      *
@@ -26,7 +27,7 @@ abstract class SuperServiceWithFilters<M : BaseModel, ID, SR: Request, UR: Reque
      *
      * @return A list of filters to be applied to the service's queries.
      */
-    open fun filters(): List<Filter<*>> {
+    open fun filters(): List<Filter<*, *>> {
         return listOf()
     }
 
@@ -48,17 +49,20 @@ abstract class SuperServiceWithFilters<M : BaseModel, ID, SR: Request, UR: Reque
      *
      * @param queryBuilder The query builder to be modified.
      */
-    open fun beforeIndex(queryBuilder: Baradum<M>) {
+    open fun beforeIndex(queryBuilder: Baradum<M, HefestoQueryBuilder<M>>) {
     }
 
     override fun index(page: PageRequest, params: Map<String, String>): Page<M> {
-        val queryBuilder = Baradum.make(model)
+        val queryBuilder = Baradum.make<M, HefestoQueryBuilder<M>>(model)
             .allowedFilters(filters())
-            .builder { it.with(*with().toTypedArray()) }
+            .builder {
+                it.getHefestoBuilder()
+                    .with(*with().toTypedArray())
+            }
 
         beforeIndex(queryBuilder)
 
-        val models = PageUtil.transformHefestoPage(queryBuilder, page)
+        val models = PageUtil.transformBaradumPage(queryBuilder, page)
 
         afterIndex(models)
 

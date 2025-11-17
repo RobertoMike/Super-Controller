@@ -18,12 +18,13 @@ val pomGroupId = group
 val pomVersion = version
 val baseArtifactId = "super-controller-mvc"
 val springBootVersion = "3.5.0"
-val baradumApacheVersion = "2.1.1"
+val baradumApacheVersion = "3.0.0"
 val jdkCompileVersion = 17
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}")
-    implementation("io.github.robertomike:baradum:${baradumApacheVersion}")
+    implementation("io.github.robertomike:baradum-core:${baradumApacheVersion}")
+    implementation("io.github.robertomike:baradum-hefesto:${baradumApacheVersion}")
     implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.12.0")
     // MapStruct core library
     implementation("org.mapstruct:mapstruct:1.6.3")

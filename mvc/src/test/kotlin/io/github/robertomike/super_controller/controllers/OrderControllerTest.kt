@@ -15,6 +15,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class OrderControllerTest : BasicTest() {
     @Autowired
@@ -41,7 +42,12 @@ class OrderControllerTest : BasicTest() {
         makeIndex(
             "$url?price=100",
             null,
-            { page -> assertFalse(page.content.isEmpty()) },
+            { page -> {
+                assertFalse(page.content.isEmpty())
+                page.content.forEach {
+                    assertTrue { it.price == 100.0}
+                }
+            }},
             object : TypeReference<Page<Order>>() {}
         )
     }

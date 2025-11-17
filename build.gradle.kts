@@ -34,7 +34,6 @@ dependencies {
     api("org.reflections:reflections:0.10.2")
     api("com.fasterxml.jackson.module:jackson-module-kotlin:2.20.1")
 
-
     runtimeOnly("org.jetbrains.kotlin:kotlin-reflect:1.2.41")
 
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")

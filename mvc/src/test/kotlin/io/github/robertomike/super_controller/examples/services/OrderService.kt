@@ -1,8 +1,8 @@
 package io.github.robertomike.super_controller.examples.services
 
-import io.github.robertomike.baradum.filters.ExactFilter
-import io.github.robertomike.baradum.filters.Filter
-import io.github.robertomike.baradum.filters.IntervalFilter
+import io.github.robertomike.baradum.core.filters.ExactFilter
+import io.github.robertomike.baradum.core.filters.Filter
+import io.github.robertomike.baradum.core.filters.IntervalFilter
 import io.github.robertomike.hefesto.actions.JoinFetch
 import io.github.robertomike.super_controller.examples.mappers.OrderMapper
 import io.github.robertomike.super_controller.examples.models.Order
@@ -20,7 +20,7 @@ open class OrderService(
     private val userRepository: UserRepository,
     override val mapper: OrderMapper
 ) : SuperServiceWithFilters<Order, Long, StoreOrderRequest, UpdateOrderRequest>() {
-    override fun filters(): List<Filter<*>> {
+    override fun filters(): List<Filter<*, *>> {
         return listOf(
             IntervalFilter("price"),
             ExactFilter("userId", "user.id")

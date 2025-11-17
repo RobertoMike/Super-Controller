@@ -1,7 +1,7 @@
 package io.github.robertomike.super_controller.config
 
-import io.github.robertomike.baradum.Baradum
-import io.github.robertomike.baradum.requests.BasicRequest
+import io.github.robertomike.baradum.core.Baradum
+import io.github.robertomike.baradum.core.requests.BasicRequest
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.context.annotation.Configuration
 import java.util.stream.Collectors
