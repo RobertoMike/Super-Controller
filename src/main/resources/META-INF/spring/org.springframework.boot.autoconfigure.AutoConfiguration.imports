@@ -1,2 +1,3 @@
 io.github.robertomike.super_controller.config.ConfigProperties
 io.github.robertomike.super_controller.config.RegistrationConfig
+io.github.robertomike.super_controller.versioning.VersioningAutoConfiguration

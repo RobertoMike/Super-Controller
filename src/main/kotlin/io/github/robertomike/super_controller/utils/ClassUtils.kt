@@ -4,8 +4,6 @@ import io.github.robertomike.super_controller.exceptions.SuperControllerExceptio
 import io.github.robertomike.super_controller.utils.ClassFounder.loadedClasses
 import org.reflections.Reflections
 import org.reflections.scanners.Scanners.SubTypes
-import java.lang.reflect.ParameterizedType
-import java.lang.reflect.Type
 
 /**
  * Utility class for working with classes.
@@ -13,14 +11,6 @@ import java.lang.reflect.Type
  * Provides methods for finding classes by name and package.
  */
 interface ClassUtils {
-    /**
-     * Returns the generics of the current class.
-     *
-     * @return An array of [Type] representing the generics of the current class.
-     */
-    val generics: Array<Type>
-        get() = (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments
-
     /**
      * Finds a class by name and package.
      *

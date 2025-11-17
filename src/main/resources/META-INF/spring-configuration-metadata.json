@@ -3,77 +3,81 @@
     {
       "name": "super-controller",
       "type": "io.github.robertomike.super_controller.config.ConfigProperties",
-      "sourceType": "io.github.robertomike.super_controller.config.ConfigProperties"
+      "sourceType": "io.github.robertomike.super_controller.config.ConfigProperties",
+      "description": "Core configuration properties for Super-Controller library."
     },
     {
       "name": "super-controller.class-suffix",
       "type": "io.github.robertomike.super_controller.config.ConfigProperties$ClassSuffix",
-      "sourceType": "io.github.robertomike.super_controller.config.ConfigProperties"
+      "sourceType": "io.github.robertomike.super_controller.config.ConfigProperties",
+      "description": "Configure naming conventions for class suffixes used in automatic class discovery."
     },
     {
       "name": "super-controller.path",
       "type": "io.github.robertomike.super_controller.config.ConfigProperties$Path",
-      "sourceType": "io.github.robertomike.super_controller.config.ConfigProperties"
+      "sourceType": "io.github.robertomike.super_controller.config.ConfigProperties",
+      "description": "Configure package paths for automatic class discovery and scanning."
     },
     {
       "name": "super-controller.controller-advice",
       "type": "io.github.robertomike.super_controller.config.ConfigProperties$ControllerAdvice",
-      "sourceType": "io.github.robertomike.super_controller.config.ConfigProperties"
+      "sourceType": "io.github.robertomike.super_controller.config.ConfigProperties",
+      "description": "Configure the built-in controller advice for global exception handling."
     }
   ],
   "properties": [
     {
       "name": "super-controller.prefix-url",
       "type": "java.lang.String",
-      "description": "The base URL prefix for the super controller.",
+      "description": "Base URL prefix prepended to all controller endpoints. Example: '/api' results in '/api/users'. Note: Version prefix (e.g., '/v1') is automatically added when using URI versioning strategy.",
       "defaultValue": "/api/"
     },
     {
       "name": "super-controller.base-package",
       "type": "java.lang.String",
-      "description": "The base package prefix for search classes.",
+      "description": "Base package path for automatic class discovery and scanning. Used to locate policy, request, and service classes. Leave empty to scan from application root package. Example: 'com.myapp' to scan 'com.myapp.policies', 'com.myapp.requests', etc.",
       "defaultValue": ""
     },
     {
       "name": "super-controller.class-suffix.policy",
       "type": "java.lang.String",
-      "description": "Class suffix for policy classes.",
+      "description": "Naming convention suffix for authorization policy classes. Used in automatic policy discovery. Example: 'Policy' matches 'UserPolicy', 'ProductPolicy'. Change to customize naming (e.g., 'AuthPolicy' for 'UserAuthPolicy').",
       "defaultValue": "Policy"
     },
     {
       "name": "super-controller.class-suffix.request",
       "type": "java.lang.String",
-      "description": "Class suffix for request classes.",
+      "description": "Naming convention suffix for request DTO classes. Used in automatic request class discovery. Example: 'Request' matches 'StoreUserRequest', 'UpdateProductRequest'. Change to customize naming (e.g., 'DTO' for 'UserDTO').",
       "defaultValue": "Request"
     },
     {
       "name": "super-controller.class-suffix.service",
       "type": "java.lang.String",
-      "description": "Class suffix for service classes.",
+      "description": "Naming convention suffix for service classes. Used in automatic service discovery. Example: 'Service' matches 'UserService', 'ProductService'. Change to customize naming (e.g., 'Manager' for 'UserManager').",
       "defaultValue": "Service"
     },
     {
       "name": "super-controller.path.policies",
       "type": "java.lang.String",
-      "description": "Path for policy classes.",
+      "description": "Package path segment for authorization policy classes relative to base-package. Example: 'policies' scans '{base-package}.policies'. Change to match your project structure (e.g., 'security.policies').",
       "defaultValue": "policies"
     },
     {
       "name": "super-controller.path.requests",
       "type": "java.lang.String",
-      "description": "Path for request classes.",
+      "description": "Package path segment for request DTO classes relative to base-package. Example: 'requests' scans '{base-package}.requests'. Change to match your project structure (e.g., 'dto.requests' or 'api.dto').",
       "defaultValue": "requests"
     },
     {
       "name": "super-controller.path.services",
       "type": "java.lang.String",
-      "description": "Path for service classes.",
+      "description": "Package path segment for service classes relative to base-package. Example: 'services' scans '{base-package}.services'. Change to match your project structure (e.g., 'domain.services' or 'business').",
       "defaultValue": "services"
     },
     {
       "name": "super-controller.controller-advice.enable",
       "type": "java.lang.Boolean",
-      "description": "Enable or disable the controller advice.",
+      "description": "Enable or disable the built-in global exception handler (@ControllerAdvice). When enabled, provides automatic error responses for common exceptions (validation errors, not found, access denied, etc.). Disable if you want to use your own custom exception handling.",
       "defaultValue": true
     }
   ]

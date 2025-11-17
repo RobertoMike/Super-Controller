@@ -1,0 +1,107 @@
+{
+  "groups": [
+    {
+      "name": "super-controller.versioning",
+      "type": "io.github.robertomike.super_controller.versioning.VersioningProperties",
+      "sourceType": "io.github.robertomike.super_controller.versioning.VersioningProperties",
+      "description": "Configuration properties for API versioning."
+    },
+    {
+      "name": "super-controller.openapi",
+      "type": "io.github.robertomike.super_controller.openapi.OpenApiProperties",
+      "sourceType": "io.github.robertomike.super_controller.openapi.OpenApiProperties",
+      "description": "Configuration properties for OpenAPI documentation generation."
+    }
+  ],
+  "properties": [
+    {
+      "name": "super-controller.versioning.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether API versioning is enabled.",
+      "defaultValue": false
+    },
+    {
+      "name": "super-controller.versioning.default-version",
+      "type": "java.lang.String",
+      "description": "The default version to use when none is specified.",
+      "defaultValue": "v1"
+    },
+    {
+      "name": "super-controller.versioning.strategy",
+      "type": "io.github.robertomike.super_controller.versioning.VersionStrategy",
+      "description": "The strategy for extracting version from request (URI, HEADER, PARAMETER, ACCEPT_HEADER).",
+      "defaultValue": "URI"
+    },
+    {
+      "name": "super-controller.versioning.header-name",
+      "type": "java.lang.String",
+      "description": "The header name when using HEADER strategy.",
+      "defaultValue": "X-API-Version"
+    },
+    {
+      "name": "super-controller.versioning.param-name",
+      "type": "java.lang.String",
+      "description": "The parameter name when using PARAMETER strategy.",
+      "defaultValue": "version"
+    },
+    {
+      "name": "super-controller.versioning.media-type-prefix",
+      "type": "java.lang.String",
+      "description": "The media type prefix when using ACCEPT_HEADER strategy.",
+      "defaultValue": "application/vnd.api"
+    },
+    {
+      "name": "super-controller.versioning.add-deprecation-headers",
+      "type": "java.lang.Boolean",
+      "description": "Whether to add deprecation headers to responses for deprecated API versions.",
+      "defaultValue": true
+    },
+    {
+      "name": "super-controller.openapi.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether OpenAPI documentation generation is enabled.",
+      "defaultValue": false
+    },
+    {
+      "name": "super-controller.openapi.title",
+      "type": "java.lang.String",
+      "description": "The title of the API documentation.",
+      "defaultValue": "API Documentation"
+    },
+    {
+      "name": "super-controller.openapi.description",
+      "type": "java.lang.String",
+      "description": "A description of the API.",
+      "defaultValue": "RESTful API built with Super-Controller"
+    },
+    {
+      "name": "super-controller.openapi.version",
+      "type": "java.lang.String",
+      "description": "The API documentation version.",
+      "defaultValue": "1.0.0"
+    }
+  ],
+  "hints": [
+    {
+      "name": "super-controller.versioning.strategy",
+      "values": [
+        {
+          "value": "URI",
+          "description": "Version specified in URI path (e.g., /v1/users, /v2/users)."
+        },
+        {
+          "value": "HEADER",
+          "description": "Version specified in custom header (e.g., X-API-Version: v1)."
+        },
+        {
+          "value": "PARAMETER",
+          "description": "Version specified as query parameter (e.g., /users?version=v1)."
+        },
+        {
+          "value": "ACCEPT_HEADER",
+          "description": "Version specified in Accept header using vendor media type (e.g., Accept: application/vnd.api.v1+json)."
+        }
+      ]
+    }
+  ]
+}

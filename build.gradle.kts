@@ -1,53 +1,43 @@
 plugins {
-    kotlin("jvm") version "2.0.21"
+    kotlin("jvm") version "2.1.0"
 
-    kotlin("kapt") version "2.0.21"  // Kotlin Annotation Processing Tool
+    kotlin("kapt") version "2.1.0"  // Kotlin Annotation Processing Tool
     id("java-library")
     id("com.vanniktech.maven.publish") version "0.29.0"
+    jacoco
 }
 
 group = "io.github.robertomike"
-version = "1.0.5"
+version = "1.0.7"
 
 val pomGroupId = group
 val pomVersion = version
 val baseArtifactId = "super-controller"
 val jdkCompileVersion = 17
+val springVersion = "6.0.0"
 val springBootVersion = "3.0.0"
-val baradumApacheVersion = "2.0.2"
-val springRules = "2.0.5"
+val springRules = "2.0.9"
+val mapStruct = "1.6.3"
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion")
-    implementation("org.springframework.boot:spring-boot-starter-validation:$springBootVersion")
-    implementation("io.github.robertomike:baradum-apache-tomcat:$baradumApacheVersion")
-    implementation("io.github.robertomike:spring-rules:$springRules")
-    implementation("org.atteo:evo-inflector:1.3")
-    implementation("org.reflections:reflections:0.10.2")
-    // MapStruct core library
-    implementation("org.mapstruct:mapstruct:1.6.3")
-
-    // MapStruct annotation processor for code generation
-    kapt("org.mapstruct:mapstruct-processor:1.6.3")
-
-    api("org.mapstruct:mapstruct:1.6.3")
+    api("io.github.robertomike:spring-rules:${springRules}")
+    api("org.springframework.data:spring-data-commons:$springBootVersion")
+    api("org.springframework:spring-web:${springVersion}")
+    api("org.springframework:spring-tx:${springVersion}")
+    api("org.mapstruct:mapstruct:$mapStruct")
     api("org.atteo:evo-inflector:1.3")
     api("org.reflections:reflections:0.10.2")
-    api("org.springframework.boot:spring-boot-starter-validation:$springBootVersion")
-    api("io.github.robertomike:spring-rules:$springRules")
+    api("com.fasterxml.jackson.module:jackson-module-kotlin:2.20.1")
 
     runtimeOnly("org.jetbrains.kotlin:kotlin-reflect:1.2.41")
 
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
     testImplementation(kotlin("test"))
-    testImplementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
-    testImplementation("mysql:mysql-connector-java:8.0.33")
 }
 
 
@@ -61,7 +51,28 @@ kapt {
 
 tasks.test {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
 }
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+}
+
+tasks.jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = "0.80".toBigDecimal()
+            }
+        }
+    }
+}
+
 kotlin {
     jvmToolchain(17)
 }
@@ -69,31 +80,31 @@ kotlin {
 
 mavenPublishing {
     publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL, automaticRelease = true)
-    
+
     // Only sign if credentials are available (CI environment)
     if (project.hasProperty("signing.keyId")) {
         signAllPublications()
     }
-    
+
     coordinates(
         groupId = group.toString(),
         artifactId = baseArtifactId,
         version = version.toString()
     )
-    
+
     pom {
         name.set("Super controller")
         description.set("This is a class for creation of controllers with super powers. Will create 5 default methods for API CRUD.")
         url.set("https://github.com/RobertoMike/SuperController")
         inceptionYear.set("2024")
-        
+
         licenses {
             license {
                 name.set("MIT License")
                 url.set("http://www.opensource.org/licenses/mit-license.php")
             }
         }
-        
+
         developers {
             developer {
                 id.set("robertomike")
@@ -102,7 +113,7 @@ mavenPublishing {
                 url.set("https://github.com/RobertoMike")
             }
         }
-        
+
         scm {
             connection.set("scm:git:git://github.com/RobertoMike/SuperController.git")
             developerConnection.set("scm:git:ssh://git@github.com/RobertoMike/SuperController.git")

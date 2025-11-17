@@ -19,5 +19,4 @@ import org.springframework.context.annotation.FilterType
         ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = arrayOf(Application::class))
     ]
 )
-open class RegistrationConfig {
-}
+open class RegistrationConfig
