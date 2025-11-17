@@ -10,8 +10,6 @@ plugins {
 group = "io.github.robertomike"
 version = "1.0.7"
 
-val pomGroupId = group
-val pomVersion = version
 val baseArtifactId = "super-controller"
 val jdkCompileVersion = 17
 val springVersion = "6.0.0"
