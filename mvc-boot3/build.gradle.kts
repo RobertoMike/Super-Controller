@@ -37,7 +37,7 @@ version = "1.1.0"
 //    dispatch, before SuperController's code executes. Fixed upstream by
 //    Spring Framework 6.2.0 (Boot 3.4.0).
 val springBootVersion = "3.4.0"
-val baradumApacheVersion = "3.0.0"
+val baradumApacheVersion = "3.0.1"
 val jdkCompileVersion = 17
 
 dependencies {

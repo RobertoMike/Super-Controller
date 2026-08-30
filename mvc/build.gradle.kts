@@ -17,7 +17,7 @@ val pomGroupId = group
 val pomVersion = version
 val baseArtifactId = "super-controller-mvc"
 val springBootVersion = "3.5.0"
-val baradumApacheVersion = "3.0.0"
+val baradumApacheVersion = "3.0.1"
 val jdkCompileVersion = 17
 
 dependencies {
