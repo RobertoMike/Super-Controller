@@ -45,7 +45,7 @@ interface SoftDeletableService<M, PAGE, ID : Any, SR : Request, UR : Request> :
 
     val repository: Repository<M, ID>
     var repositorySupport: RepositorySupport
-    
+
     /**
      * Soft deletes an entity by marking it as deleted without removing from database.
      *

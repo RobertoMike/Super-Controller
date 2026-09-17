@@ -2,8 +2,10 @@ package io.github.robertomike.super_controller.controllers
 
 import io.github.robertomike.super_controller.config.builder.SuperControllerConfig
 import io.github.robertomike.super_controller.enums.Methods.*
+import io.github.robertomike.super_controller.exceptions.NotFoundException
 import io.github.robertomike.super_controller.exceptions.SuperControllerException
 import io.github.robertomike.super_controller.exceptions.UnauthorizedException
+import io.github.robertomike.super_controller.models.SoftDeletableEntity
 import io.github.robertomike.super_controller.policies.BasePolicy
 import io.github.robertomike.super_controller.policies.Policy
 import io.github.robertomike.super_controller.requests.Request
@@ -120,7 +122,7 @@ abstract class SuperController<M : Any, ID : Any, SR : Request, UR : Request>() 
      * @return The model
      */
     override fun show(@PathVariable id: ID): Any {
-        val model = service.findById(id)
+        val model = findByIdExcludingSoftDeleted(id)
 
         executePolicy(SHOW, model).policyIsValid()
 
@@ -134,7 +136,7 @@ abstract class SuperController<M : Any, ID : Any, SR : Request, UR : Request>() 
      * @param request The JSON data for the updated model
      */
     override fun update(@PathVariable id: ID, @Valid @RequestBody request: UR): Any {
-        val model = service.findById(id)
+        val model = findByIdExcludingSoftDeleted(id)
 
         executePolicy(UPDATE, model, request).policyIsValid()
 
@@ -149,11 +151,29 @@ abstract class SuperController<M : Any, ID : Any, SR : Request, UR : Request>() 
      * @param id The ID of the model to delete
      */
     override fun destroy(@PathVariable id: ID) {
-        val model = service.findById(id)
+        val model = findByIdExcludingSoftDeleted(id)
 
         executePolicy(DESTROY, model).policyIsValid()
 
         service.delete(model)
+    }
+
+    /**
+     * Looks up a model by ID for the normal CRUD actions (show/update/destroy),
+     * treating a soft-deleted entity as not found.
+     *
+     * SoftDeletableMarker's own softDelete/restore/forceDelete deliberately go
+     * through [BasicService.findById] directly instead of this method, since they
+     * need to operate on already-deleted entities too (e.g. restoring one).
+     */
+    private fun findByIdExcludingSoftDeleted(id: ID): M {
+        val model = service.findById(id)
+
+        if (model is SoftDeletableEntity && model.isDeleted()) {
+            throw NotFoundException("Cannot find model with id $id")
+        }
+
+        return model
     }
 
     /**

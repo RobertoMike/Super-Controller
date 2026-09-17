@@ -2,9 +2,28 @@ package io.github.robertomike.super_controller.services.bulk
 
 import io.github.robertomike.super_controller.requests.Request
 import io.github.robertomike.super_controller.services.interfaces.BasicService
+import jakarta.validation.ConstraintViolation
+import jakarta.validation.Validation
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.transaction.annotation.Transactional
+
+// Bulk endpoints take a raw List<SR>/Map<ID, UR> rather than a single @Valid @RequestBody,
+// so Spring MVC's normal bean-validation-on-controller-parameter path never runs for the
+// individual items - each one has to be validated explicitly here. A standalone validator
+// factory (rather than Spring's managed Validator bean) is used because this is an
+// interface default method with no constructor/DI to pull one from.
+private val bulkValidator by lazy { Validation.buildDefaultValidatorFactory().validator }
+
+private fun <T : Any> validationErrors(target: T): Map<String, Any>? {
+    val violations = bulkValidator.validate(target)
+    if (violations.isEmpty()) return null
+
+    return violations.groupBy(
+        { it.propertyPath.toString() },
+        ConstraintViolation<T>::getMessage
+    )
+}
 
 /**
  * Interface for services that support bulk operations.
@@ -60,6 +79,13 @@ interface BulkOperations<M : Any, PAGE, ID : Any, SR : Request, UR : Request> :
         val failed = mutableListOf<BulkError>()
 
         requests.forEachIndexed { index, request ->
+            val violations = validationErrors(request)
+            if (violations != null) {
+                logger.warn("Failed to store item at index $index: validation failed")
+                failed.add(BulkError(index, "Validation failed", violations))
+                return@forEachIndexed
+            }
+
             try {
                 beforeBulkStore(request)
                 val entity = store(request)
@@ -96,6 +122,13 @@ interface BulkOperations<M : Any, PAGE, ID : Any, SR : Request, UR : Request> :
         val failed = mutableListOf<BulkError>()
 
         updates.entries.forEachIndexed { index, (id, request) ->
+            val violations = validationErrors(request)
+            if (violations != null) {
+                logger.warn("Failed to update item at index $index (ID: $id): validation failed")
+                failed.add(BulkError(index, "Validation failed", violations))
+                return@forEachIndexed
+            }
+
             try {
                 val entity = findById(id)
                 beforeBulkUpdate(entity, request)

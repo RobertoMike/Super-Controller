@@ -2,6 +2,7 @@ package io.github.robertomike.super_controller.services
 
 import io.github.robertomike.super_controller.exceptions.NotFoundException
 import io.github.robertomike.super_controller.exceptions.SuperControllerException
+import io.github.robertomike.super_controller.models.SoftDeletableEntity
 import io.github.robertomike.super_controller.repositories.RepositorySupport
 import io.github.robertomike.super_controller.requests.Request
 import io.github.robertomike.super_controller.services.interfaces.AfterAndBeforeActions
@@ -12,6 +13,8 @@ import jakarta.annotation.PostConstruct
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.jpa.domain.Specification
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.repository.Repository
 import org.springframework.transaction.annotation.Transactional
 
@@ -49,7 +52,20 @@ abstract class SuperService<M : Any, ID : Any, SR : Request, UR : Request> : Cla
      * @return A page of models.
      */
     override fun index(page: PageRequest, params: Map<String, String>): Page<M> {
-        val models = repositorySupport.findAll(page, repository)
+        // Excluding soft-deleted rows needs a DB-level predicate to keep pagination
+        // counts correct (filtering the fetched page in-memory would under-fill pages
+        // and misreport totals). That requires the repository to support Specifications;
+        // when it doesn't, we fall back to the unfiltered query rather than silently
+        // changing behavior for repositories that were never asked to opt into this.
+        val models = if (SoftDeletableEntity::class.java.isAssignableFrom(model) && repository is JpaSpecificationExecutor<*>) {
+            @Suppress("UNCHECKED_CAST")
+            (repository as JpaSpecificationExecutor<M>).findAll(
+                Specification { root, _, cb -> cb.isNull(root.get<Any>("deletedAt")) },
+                page
+            )
+        } else {
+            repositorySupport.findAll(page, repository)
+        }
 
         afterIndex(models)
 
