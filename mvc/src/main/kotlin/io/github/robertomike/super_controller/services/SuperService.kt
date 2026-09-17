@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional
  * @param M The type of the model being managed by this service.
  * @param ID The type of the ID of the model being managed by this service.
  */
-abstract class SuperService<M, ID, SR : Request, UR : Request> : ClassUtils,
+abstract class SuperService<M : Any, ID : Any, SR : Request, UR : Request> : ClassUtils,
     AfterAndBeforeActions<M, Page<M>, SR, UR, Unit>, BasicService<M, Page<M>, ID, SR, UR, Unit>,
     MappingActions<M, SR, UR> {
 

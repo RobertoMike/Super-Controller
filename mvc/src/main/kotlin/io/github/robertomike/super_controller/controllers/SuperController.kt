@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.ResponseStatus
  * @param M The type of the model being controlled.
  * @param ID The type of the ID used to identify the model.
  */
-abstract class SuperController<M, ID : Any, SR : Request, UR : Request>() :
+abstract class SuperController<M : Any, ID : Any, SR : Request, UR : Request>() :
     CrudController<ID, Any, SR, UR, Page<*>, Unit>,
     ControllerUtil<M, Boolean>() {
 

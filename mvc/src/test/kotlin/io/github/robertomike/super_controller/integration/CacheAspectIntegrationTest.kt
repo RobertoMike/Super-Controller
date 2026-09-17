@@ -18,7 +18,7 @@ package io.github.robertomike.super_controller.integration
  * additional RouterConfig setup specific to this framework's custom routing mechanism.
  */
 
-import com.fasterxml.jackson.core.type.TypeReference
+import tools.jackson.core.type.TypeReference
 import io.github.robertomike.super_controller.BasicTest
 import io.github.robertomike.super_controller.config.CacheTestConfig
 import io.github.robertomike.super_controller.examples.models.Order as OrderModel

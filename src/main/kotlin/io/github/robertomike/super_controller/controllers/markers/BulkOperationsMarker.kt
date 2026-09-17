@@ -54,7 +54,7 @@ import org.springframework.web.bind.annotation.RequestBody
  * @param SR The store request type (for creating entities).
  * @param UR The update request type (for updating entities).
  */
-interface BulkOperationsMarker<M, ID, SR : Request, UR : Request> {
+interface BulkOperationsMarker<M : Any, ID : Any, SR : Request, UR : Request> {
 
     var service: BasicService<M, Page<M>, ID, Request, Request, Unit>
     /**
@@ -77,7 +77,7 @@ interface BulkOperationsMarker<M, ID, SR : Request, UR : Request> {
      * @return Bulk operation results.
      */
     @Transactional
-    fun bulkStore(@RequestBody requests: List<SR>): ResponseEntity<BulkResult<M>> {
+    fun bulkStore(@RequestBody requests: @JvmSuppressWildcards List<SR>): ResponseEntity<BulkResult<M>> {
         requests.forEach { beforeBulkStore(it) }
         val result = getBulkService().bulkStore(requests)
         result.successful.forEach { afterBulkStore(it) }
@@ -93,7 +93,7 @@ interface BulkOperationsMarker<M, ID, SR : Request, UR : Request> {
      * @return Bulk operation results.
      */
     @Transactional
-    fun bulkUpdate(@RequestBody updates: List<BulkUpdateItem<ID, UR>>): ResponseEntity<BulkResult<M>> {
+    fun bulkUpdate(@RequestBody updates: @JvmSuppressWildcards List<BulkUpdateItem<ID, UR>>): ResponseEntity<BulkResult<M>> {
         updates.forEach { beforeBulkUpdate(it.id, it.request) }
         
         // Convert list to map for service layer

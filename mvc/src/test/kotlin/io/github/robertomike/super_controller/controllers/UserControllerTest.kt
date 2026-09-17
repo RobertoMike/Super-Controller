@@ -1,6 +1,6 @@
 package io.github.robertomike.super_controller.controllers
 
-import com.fasterxml.jackson.core.type.TypeReference
+import tools.jackson.core.type.TypeReference
 import io.github.robertomike.super_controller.BasicTest
 import io.github.robertomike.super_controller.examples.models.User
 import io.github.robertomike.super_controller.examples.repositories.UserRepository

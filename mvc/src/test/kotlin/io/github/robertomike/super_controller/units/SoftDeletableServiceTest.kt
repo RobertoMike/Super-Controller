@@ -163,23 +163,23 @@ class SoftDeletableServiceTest {
         override var repositorySupport: RepositorySupport = object : RepositorySupport {
             override fun supportIt(repository: Repository<Any, Any>): Boolean = true
             
-            override fun <M, ID> persist(model: M, repository: Repository<M, ID>) {
+            override fun <M : Any, ID : Any> persist(model: M, repository: Repository<M, ID>) {
                 operationOrder.add("persist")
             }
-            
-            override fun <M, ID> update(model: M, repository: Repository<M, ID>) {
+
+            override fun <M : Any, ID : Any> update(model: M, repository: Repository<M, ID>) {
                 operationOrder.add("update")
             }
-            
-            override fun <M, ID> delete(model: M, repository: Repository<M, ID>) {
+
+            override fun <M : Any, ID : Any> delete(model: M, repository: Repository<M, ID>) {
                 operationOrder.add("delete")
             }
-            
-            override fun <M, ID> findAll(page: PageRequest, repository: Repository<M, ID>): Page<M> {
+
+            override fun <M : Any, ID : Any> findAll(page: PageRequest, repository: Repository<M, ID>): Page<M> {
                 return PageImpl(emptyList())
             }
-            
-            override fun <M, ID> findById(id: ID, repository: Repository<M, ID>): java.util.Optional<M> {
+
+            override fun <M : Any, ID : Any> findById(id: ID, repository: Repository<M, ID>): java.util.Optional<M> {
                 throw NotImplementedError()
             }
         }

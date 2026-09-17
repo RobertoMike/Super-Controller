@@ -52,7 +52,7 @@ data class RouteDefinition(
  * @param SR The type of the store request.
  * @param UR The type of the update request.
  */
-data class SuperControllerConfig<M, ID, SR, UR>(
+data class SuperControllerConfig<M : Any, ID : Any, SR, UR>(
     val service: BasicService<M, Page<M>, ID, Request, Request, Unit>?,
     val needAuthorization: Boolean,
     val policy: BasePolicy<M, Request, Request, *>?,

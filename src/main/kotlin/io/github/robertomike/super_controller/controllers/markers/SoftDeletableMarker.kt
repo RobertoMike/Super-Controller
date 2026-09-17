@@ -53,7 +53,7 @@ import org.springframework.transaction.annotation.Transactional
  * @param M The type of the model (must implement SoftDeletableEntity).
  * @param ID The type of the ID.
  */
-interface SoftDeletableMarker<M, ID> where M : SoftDeletableEntity {
+interface SoftDeletableMarker<M, ID : Any> where M : SoftDeletableEntity {
 
     var service: BasicService<M, Page<M>, ID, Request, Request, Unit>
     /**

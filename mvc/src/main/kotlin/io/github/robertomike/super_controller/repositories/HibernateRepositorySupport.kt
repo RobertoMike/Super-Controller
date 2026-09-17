@@ -19,7 +19,7 @@ class HibernateRepositorySupport : RepositorySupport {
         return repository is HibernateRepository<*> && repository is JpaRepository
     }
 
-    override fun <M, I> findAll(page: PageRequest, repository: Repository<M, I>): Page<M> {
+    override fun <M : Any, I : Any> findAll(page: PageRequest, repository: Repository<M, I>): Page<M> {
         return repository.castJpa()
             .findAll(page)
     }
@@ -29,17 +29,17 @@ class HibernateRepositorySupport : RepositorySupport {
      *
      * @param model The model to save.
      */
-    override fun <M, I> persist(model: M, repository: Repository<M, I>) {
+    override fun <M : Any, I : Any> persist(model: M, repository: Repository<M, I>) {
         repository.castHibernate()
             .persist(model)
     }
 
-    override fun <M, I> findById(
+    override fun <M : Any, I : Any> findById(
         id: I,
         repository: Repository<M, I>
     ): Optional<M> {
         return repository.castJpa()
-            .findById(id as (I & Any))
+            .findById(id)
     }
 
     /**
@@ -47,7 +47,7 @@ class HibernateRepositorySupport : RepositorySupport {
      *
      * @param model The model to save.
      */
-    override fun <M, I> update(model: M, repository: Repository<M, I>) {
+    override fun <M : Any, I : Any> update(model: M, repository: Repository<M, I>) {
         repository.castHibernate()
             .update(model)
     }
@@ -57,12 +57,12 @@ class HibernateRepositorySupport : RepositorySupport {
      *
      * @param model The model to save.
      */
-    override fun <M, I> delete(model: M, repository: Repository<M, I>) {
+    override fun <M : Any, I : Any> delete(model: M, repository: Repository<M, I>) {
         repository.castJpa()
-            .delete(model as (M & Any))
+            .delete(model)
     }
 
-    private fun <M, I> Repository<M, I>.castJpa(): JpaRepository<M, I> {
+    private fun <M : Any, I : Any> Repository<M, I>.castJpa(): JpaRepository<M, I> {
         if (this !is JpaRepository<M, I>) {
             throw SuperControllerException(
                 "The repository doesn't extend from JpaRepository"
@@ -72,7 +72,7 @@ class HibernateRepositorySupport : RepositorySupport {
         return this
     }
 
-    private fun <M, I> Repository<M, I>.castHibernate(): HibernateRepository<M> {
+    private fun <M : Any, I : Any> Repository<M, I>.castHibernate(): HibernateRepository<M> {
         if (this !is HibernateRepository<*>) {
             throw SuperControllerException(
                 "The repository doesn't extend from HibernateRepository"

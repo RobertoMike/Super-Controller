@@ -1,7 +1,7 @@
 plugins {
-    kotlin("jvm") version "2.1.0"
+    kotlin("jvm") version "2.3.21"
 
-    kotlin("kapt") version "2.1.0"  // Kotlin Annotation Processing Tool
+    kotlin("kapt") version "2.3.21"  // Kotlin Annotation Processing Tool
     id("java-library")
     id("com.vanniktech.maven.publish") version "0.29.0"
     jacoco
@@ -12,8 +12,8 @@ version = "1.0.7"
 
 val baseArtifactId = "super-controller"
 val jdkCompileVersion = 17
-val springVersion = "6.0.0"
-val springBootVersion = "3.0.0"
+val springVersion = "7.0.9"
+val springBootVersion = "4.1.1"
 val springRules = "2.0.9"
 val mapStruct = "1.6.3"
 
@@ -29,7 +29,7 @@ dependencies {
     api("org.mapstruct:mapstruct:$mapStruct")
     api("org.atteo:evo-inflector:1.3")
     api("org.reflections:reflections:0.10.2")
-    api("com.fasterxml.jackson.module:jackson-module-kotlin:2.20.1")
+    api("tools.jackson.module:jackson-module-kotlin:3.2.2")
 
     runtimeOnly("org.jetbrains.kotlin:kotlin-reflect:1.2.41")
 

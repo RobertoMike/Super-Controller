@@ -1,12 +1,13 @@
 plugins {
-    kotlin("jvm") version "2.1.0"
-    kotlin("kapt") version "2.1.0"  // Kotlin Annotation Processing Tool
+    kotlin("jvm") version "2.3.21"
+    kotlin("kapt") version "2.3.21"  // Kotlin Annotation Processing Tool
     id("java-library")
     id("com.vanniktech.maven.publish") version "0.29.0"
     jacoco
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
@@ -16,20 +17,25 @@ version = "1.1.0"
 val pomGroupId = group
 val pomVersion = version
 val baseArtifactId = "super-controller-mvc"
-val springBootVersion = "3.5.0"
-val baradumApacheVersion = "3.0.1"
+val springBootVersion = "4.1.1"
+val baradumApacheVersion = "4.0.0"
 val jdkCompileVersion = 17
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}")
-    implementation("io.github.robertomike:baradum-core:${baradumApacheVersion}")
-    implementation("io.github.robertomike:baradum-hefesto:${baradumApacheVersion}")
-    implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.12.0")
+    // api scope: consumer entities implement HibernateModel (hefesto-hibernate, transitive
+    // via baradum-hefesto), consumer repositories implement HibernateRepository
+    // (hypersistence-utils), and SuperServiceWithFilters overrides reference Baradum/
+    // HefestoQueryBuilder directly - all of these types leak into the public API surface
+    // consumers must compile against, not just this module's own implementation.
+    api("io.github.robertomike:baradum-core:${baradumApacheVersion}")
+    api("io.github.robertomike:baradum-hefesto:${baradumApacheVersion}")
+    api("io.hypersistence:hypersistence-utils-hibernate-70:3.15.3")
     // MapStruct core library
     implementation("org.mapstruct:mapstruct:1.6.3")
 
     // OpenAPI / Swagger Documentation
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1")
 
     api(project(":"))
     api("org.springframework.boot:spring-boot-starter-web:${springBootVersion}")
@@ -38,9 +44,11 @@ dependencies {
     kapt("org.mapstruct:mapstruct-processor:1.6.3")
 
     testImplementation(kotlin("test"))
-    testImplementation("mysql:mysql-connector-java:8.0.33")
-    testImplementation("com.h2database:h2:2.2.224")
-    testImplementation("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
+    testImplementation("com.mysql:mysql-connector-j:9.7.0")
+    testImplementation("com.h2database:h2:2.5.250")
+    // Boot 4 modularized starter-test: MockMvc support now lives in the
+    // webmvc-specific test starter, which also pulls in spring-boot-starter-test.
+    testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test:${springBootVersion}")
 }
 
 kapt {

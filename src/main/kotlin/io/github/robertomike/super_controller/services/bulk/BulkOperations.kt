@@ -4,6 +4,7 @@ import io.github.robertomike.super_controller.requests.Request
 import io.github.robertomike.super_controller.services.interfaces.BasicService
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
+import org.springframework.transaction.annotation.Transactional
 
 /**
  * Interface for services that support bulk operations.
@@ -32,7 +33,7 @@ import org.springframework.data.domain.Page
  * @param SR The type of the store request.
  * @param UR The type of the update request.
  */
-interface BulkOperations<M, PAGE, ID, SR : Request, UR : Request> :
+interface BulkOperations<M : Any, PAGE, ID : Any, SR : Request, UR : Request> :
     BasicService<M, PAGE, ID, SR, UR, Unit> {
     
     /**
@@ -43,7 +44,15 @@ interface BulkOperations<M, PAGE, ID, SR : Request, UR : Request> :
      * @param requests List of store requests.
      * @return Result containing successful and failed operations.
      */
-    fun bulkStore(requests: List<SR>): BulkResult<M> {
+    // Transactional boundary lives here, not just on the controller-layer marker's
+    // bulkStore: this method is inherited (never overridden) as a plain interface
+    // default, and it calls store() on `this` - a self-invocation that bypasses the
+    // Spring AOP proxy, so store()'s own @Transactional never fires for it. Without a
+    // transaction started here, HibernateRepository-backed persist() (which unlike
+    // JpaRepository.save() has no transactional wrapper of its own) fails outside of
+    // an already-active transaction (e.g. a test's own @Transactional).
+    @Transactional
+    fun bulkStore(requests: @JvmSuppressWildcards List<SR>): BulkResult<M> {
         val logger = LoggerFactory.getLogger(this::class.java)
         logger.debug("Service bulk store started with ${requests.size} items")
         
@@ -78,7 +87,8 @@ interface BulkOperations<M, PAGE, ID, SR : Request, UR : Request> :
      * @param updates Map of ID to update request.
      * @return Result containing successful and failed operations.
      */
-    fun bulkUpdate(updates: Map<ID, UR>): BulkResult<M> {
+    @Transactional
+    fun bulkUpdate(updates: @JvmSuppressWildcards Map<ID, UR>): BulkResult<M> {
         val logger = LoggerFactory.getLogger(this::class.java)
         logger.debug("Service bulk update started with ${updates.size} items")
         
@@ -114,7 +124,8 @@ interface BulkOperations<M, PAGE, ID, SR : Request, UR : Request> :
      * @param ids List of IDs to delete.
      * @return Result containing deletion statistics.
      */
-    fun bulkDelete(ids: List<ID>): BulkDeleteResult {
+    @Transactional
+    fun bulkDelete(ids: @JvmSuppressWildcards List<ID>): BulkDeleteResult {
         val logger = LoggerFactory.getLogger(this::class.java)
         logger.debug("Service bulk delete started with ${ids.size} items")
         
