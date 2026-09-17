@@ -12,6 +12,7 @@ import io.github.robertomike.super_controller.utils.ClassUtils
 import jakarta.annotation.PostConstruct
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.jpa.domain.Specification
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
@@ -52,17 +53,29 @@ abstract class SuperService<M : Any, ID : Any, SR : Request, UR : Request> : Cla
      * @return A page of models.
      */
     override fun index(page: PageRequest, params: Map<String, String>): Page<M> {
-        // Excluding soft-deleted rows needs a DB-level predicate to keep pagination
-        // counts correct (filtering the fetched page in-memory would under-fill pages
-        // and misreport totals). That requires the repository to support Specifications;
-        // when it doesn't, we fall back to the unfiltered query rather than silently
-        // changing behavior for repositories that were never asked to opt into this.
-        val models = if (SoftDeletableEntity::class.java.isAssignableFrom(model) && repository is JpaSpecificationExecutor<*>) {
-            @Suppress("UNCHECKED_CAST")
-            (repository as JpaSpecificationExecutor<M>).findAll(
-                Specification { root, _, cb -> cb.isNull(root.get<Any>("deletedAt")) },
-                page
-            )
+        val models = if (SoftDeletableEntity::class.java.isAssignableFrom(model)) {
+            if (repository is JpaSpecificationExecutor<*>) {
+                // DB-level predicate: pagination counts (totalElements/totalPages) stay
+                // exact, since the filter runs before LIMIT/OFFSET is applied.
+                @Suppress("UNCHECKED_CAST")
+                (repository as JpaSpecificationExecutor<M>).findAll(
+                    Specification { root, _, cb -> cb.isNull(root.get<Any>("deletedAt")) },
+                    page
+                )
+            } else {
+                // No Specification support on this repository: a soft-deleted row must
+                // still never leak into the list response - show/update/destroy already
+                // guarantee that - so filter what was fetched. Doing that post-fetch means
+                // totalElements/totalPages reflect the *unfiltered* query and can overcount
+                // when deleted rows fall on this page; implement JpaSpecificationExecutor<M>
+                // on the repository for exact counts.
+                val fetched = repositorySupport.findAll(page, repository)
+                PageImpl(
+                    fetched.content.filterNot { it is SoftDeletableEntity && it.isDeleted() },
+                    fetched.pageable,
+                    fetched.totalElements
+                )
+            }
         } else {
             repositorySupport.findAll(page, repository)
         }

@@ -11,6 +11,7 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import org.springframework.transaction.annotation.Transactional
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -22,6 +23,10 @@ import kotlin.test.assertTrue
  */
 @SpringBootTest
 @AutoConfigureMockMvc
+// Without this, each test method's deleteAll()/soft-delete/restore is actually
+// committed (no other class-level transaction to roll it back), leaking into
+// whichever test class happens to run next against the same MySQL instance.
+@Transactional
 class SoftDeleteExtensionIntegrationTest {
 
     @Autowired

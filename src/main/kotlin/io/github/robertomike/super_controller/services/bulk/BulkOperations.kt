@@ -1,22 +1,19 @@
 package io.github.robertomike.super_controller.services.bulk
 
+import io.github.robertomike.super_controller.exceptions.NotFoundException
+import io.github.robertomike.super_controller.models.SoftDeletableEntity
 import io.github.robertomike.super_controller.requests.Request
 import io.github.robertomike.super_controller.services.interfaces.BasicService
 import jakarta.validation.ConstraintViolation
-import jakarta.validation.Validation
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.transaction.annotation.Transactional
 
 // Bulk endpoints take a raw List<SR>/Map<ID, UR> rather than a single @Valid @RequestBody,
 // so Spring MVC's normal bean-validation-on-controller-parameter path never runs for the
-// individual items - each one has to be validated explicitly here. A standalone validator
-// factory (rather than Spring's managed Validator bean) is used because this is an
-// interface default method with no constructor/DI to pull one from.
-private val bulkValidator by lazy { Validation.buildDefaultValidatorFactory().validator }
-
+// individual items - each one has to be validated explicitly here.
 private fun <T : Any> validationErrors(target: T): Map<String, Any>? {
-    val violations = bulkValidator.validate(target)
+    val violations = BulkValidatorHolder.validator.validate(target)
     if (violations.isEmpty()) return null
 
     return violations.groupBy(
@@ -79,14 +76,18 @@ interface BulkOperations<M : Any, PAGE, ID : Any, SR : Request, UR : Request> :
         val failed = mutableListOf<BulkError>()
 
         requests.forEachIndexed { index, request ->
-            val violations = validationErrors(request)
-            if (violations != null) {
-                logger.warn("Failed to store item at index $index: validation failed")
-                failed.add(BulkError(index, "Validation failed", violations))
-                return@forEachIndexed
-            }
-
             try {
+                // Validation runs inside the try, not before it: a raw JSON `null` list
+                // element deserializes past Kotlin's non-null SR type (Jackson doesn't
+                // enforce it), and validate() rejects a null target - that failure needs
+                // to become a per-item BulkError like any other, not abort the batch.
+                val violations = validationErrors(request)
+                if (violations != null) {
+                    logger.warn("Failed to store item at index $index: validation failed")
+                    failed.add(BulkError(index, "Validation failed", violations))
+                    return@forEachIndexed
+                }
+
                 beforeBulkStore(request)
                 val entity = store(request)
                 afterBulkStore(entity, request)
@@ -122,15 +123,22 @@ interface BulkOperations<M : Any, PAGE, ID : Any, SR : Request, UR : Request> :
         val failed = mutableListOf<BulkError>()
 
         updates.entries.forEachIndexed { index, (id, request) ->
-            val violations = validationErrors(request)
-            if (violations != null) {
-                logger.warn("Failed to update item at index $index (ID: $id): validation failed")
-                failed.add(BulkError(index, "Validation failed", violations))
-                return@forEachIndexed
-            }
-
             try {
+                val violations = validationErrors(request)
+                if (violations != null) {
+                    logger.warn("Failed to update item at index $index (ID: $id): validation failed")
+                    failed.add(BulkError(index, "Validation failed", violations))
+                    return@forEachIndexed
+                }
+
                 val entity = findById(id)
+                // findById() itself doesn't filter soft-deleted entities (it's the same
+                // shared lookup SoftDeletableService's own restore() relies on finding
+                // deleted rows through), so bulk update has to reject them explicitly to
+                // match the single-item PUT /{id}, which already 404s on a deleted row.
+                if (entity is SoftDeletableEntity && entity.isDeleted()) {
+                    throw NotFoundException("Cannot find model with id $id")
+                }
                 beforeBulkUpdate(entity, request)
                 val updated = update(entity, request)
                 afterBulkUpdate(updated, request)
@@ -168,6 +176,12 @@ interface BulkOperations<M : Any, PAGE, ID : Any, SR : Request, UR : Request> :
         ids.forEachIndexed { index, id ->
             try {
                 val entity = findById(id)
+                // Matches the single-item DELETE /{id} (destroy), which already 404s on
+                // a soft-deleted row rather than hard-deleting it out from under a
+                // pending restore.
+                if (entity is SoftDeletableEntity && entity.isDeleted()) {
+                    throw NotFoundException("Cannot find model with id $id")
+                }
                 beforeBulkDelete(entity)
                 delete(entity)
                 afterBulkDelete(id)
