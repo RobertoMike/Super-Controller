@@ -5,6 +5,7 @@ import io.github.robertomike.super_controller.requests.Request
 import io.github.robertomike.super_controller.services.bulk.BulkResult
 import io.github.robertomike.super_controller.services.bulk.BulkDeleteResult
 import io.github.robertomike.super_controller.services.interfaces.BasicService
+import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import io.github.robertomike.super_controller.services.bulk.BulkOperations as BulkOperationsService
 import org.springframework.http.ResponseEntity
@@ -54,7 +55,7 @@ import org.springframework.web.bind.annotation.RequestBody
  * @param SR The store request type (for creating entities).
  * @param UR The update request type (for updating entities).
  */
-interface BulkOperationsMarker<M, ID, SR : Request, UR : Request> {
+interface BulkOperationsMarker<M : Any, ID : Any, SR : Request, UR : Request> {
 
     var service: BasicService<M, Page<M>, ID, Request, Request, Unit>
     /**
@@ -67,7 +68,27 @@ interface BulkOperationsMarker<M, ID, SR : Request, UR : Request> {
         }
         return service as BulkOperationsService<M, *, ID, SR, UR>
     }
-    
+
+    /**
+     * Runs a per-item controller-level hook (one of the beforeBulk/afterBulk methods
+     * below), logging and continuing on failure instead of propagating it. These loops
+     * run outside the service layer's own per-item try/catch, so an exception here
+     * (an invalid item, or a consumer's own hook override throwing) would otherwise
+     * abort the whole batch response even though the actual store/update/delete work
+     * is unaffected.
+     */
+    private fun <T> runHookForEach(items: Iterable<T>, hookName: String, hook: (T) -> Unit) {
+        val logger = LoggerFactory.getLogger(this::class.java)
+        items.forEach {
+            try {
+                hook(it)
+            } catch (e: Exception) {
+                logger.warn("$hookName failed for an item: ${e.message}")
+            }
+        }
+    }
+
+
     /**
      * Creates multiple entities in bulk.
      *
@@ -77,10 +98,10 @@ interface BulkOperationsMarker<M, ID, SR : Request, UR : Request> {
      * @return Bulk operation results.
      */
     @Transactional
-    fun bulkStore(@RequestBody requests: List<SR>): ResponseEntity<BulkResult<M>> {
-        requests.forEach { beforeBulkStore(it) }
+    fun bulkStore(@RequestBody requests: @JvmSuppressWildcards List<SR>): ResponseEntity<BulkResult<M>> {
+        runHookForEach(requests, "beforeBulkStore", ::beforeBulkStore)
         val result = getBulkService().bulkStore(requests)
-        result.successful.forEach { afterBulkStore(it) }
+        runHookForEach(result.successful, "afterBulkStore", ::afterBulkStore)
         return ResponseEntity.ok(result)
     }
     
@@ -93,14 +114,17 @@ interface BulkOperationsMarker<M, ID, SR : Request, UR : Request> {
      * @return Bulk operation results.
      */
     @Transactional
-    fun bulkUpdate(@RequestBody updates: List<BulkUpdateItem<ID, UR>>): ResponseEntity<BulkResult<M>> {
-        updates.forEach { beforeBulkUpdate(it.id, it.request) }
-        
-        // Convert list to map for service layer
-        val updateMap = updates.associate { it.id to it.request }
+    fun bulkUpdate(@RequestBody updates: @JvmSuppressWildcards List<BulkUpdateItem<ID, UR>>): ResponseEntity<BulkResult<M>> {
+        runHookForEach(updates, "beforeBulkUpdate") { beforeBulkUpdate(it.id, it.request) }
+
+        // Convert list to map for service layer. A raw JSON null list element (an
+        // invalid BulkUpdateItem) is dropped here rather than crashing the whole
+        // request - the map has no slot to carry a "failed at conversion" entry for
+        // it, unlike a per-item exception the service layer's own loop can catch.
+        val updateMap = updates.mapNotNull { it?.let { item -> item.id to item.request } }.toMap()
         val result = getBulkService().bulkUpdate(updateMap)
-        
-        result.successful.forEach { afterBulkUpdate(it) }
+
+        runHookForEach(result.successful, "afterBulkUpdate", ::afterBulkUpdate)
         return ResponseEntity.ok(result)
     }
     
@@ -114,11 +138,11 @@ interface BulkOperationsMarker<M, ID, SR : Request, UR : Request> {
      */
     @Transactional
     fun bulkDelete(@RequestBody ids: List<ID>): ResponseEntity<BulkDeleteResult> {
-        ids.forEach { beforeBulkDelete(it) }
-        
+        runHookForEach(ids, "beforeBulkDelete", ::beforeBulkDelete)
+
         val deleteResult = getBulkService().bulkDelete(ids)
-        
-        ids.forEach { afterBulkDelete(it) }
+
+        runHookForEach(ids, "afterBulkDelete", ::afterBulkDelete)
         return ResponseEntity.ok(deleteResult)
     }
     

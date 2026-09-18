@@ -236,8 +236,15 @@ abstract class BaseRouter<out C : CrudController<*, *, *, *, *, *>>(
     )
 
     fun searchMethodFor(controller: Any, method: String): Method {
-        return controller.javaClass.methods.find {
-            it.name == method && !it.isBridge
-        } ?: throw RuntimeException("Cannot find method $method in $controller")
+        val candidates = controller.javaClass.methods.filter { it.name == method }
+
+        // Prefer a non-bridge match (the real implementation), but fall back to a
+        // bridge method when that's the only candidate - e.g. a class that inherits
+        // a Kotlin interface default method without overriding it can end up with
+        // only a synthetic forwarding method marked ACC_BRIDGE, which is still a
+        // perfectly invokable delegate to the real implementation.
+        return candidates.firstOrNull { !it.isBridge }
+            ?: candidates.firstOrNull()
+            ?: throw RuntimeException("Cannot find method $method in $controller")
     }
 }

@@ -55,7 +55,7 @@ import org.springframework.web.bind.annotation.RequestMethod
  * @param SR The type of the store request.
  * @param UR The type of the update request.
  */
-class SuperControllerBuilder<M, ID : Any, SR : Request, UR : Request> {
+class SuperControllerBuilder<M : Any, ID : Any, SR : Request, UR : Request> {
     private var service: BasicService<M, Page<M>, ID, Request, Request, Unit>? = null
     private var needAuthorization: Boolean = true
     private var policy: BasePolicy<M, Request, Request, *>? = null
@@ -252,7 +252,7 @@ class SuperControllerBuilder<M, ID : Any, SR : Request, UR : Request> {
          *
          * @return A new builder.
          */
-        fun <M, ID : Any, SR : Request, UR : Request> create():
+        fun <M : Any, ID : Any, SR : Request, UR : Request> create():
                 SuperControllerBuilder<M, ID, SR, UR> = SuperControllerBuilder()
     }
 }

@@ -6,6 +6,7 @@ import io.github.robertomike.super_controller.requests.Request
 import io.github.robertomike.super_controller.services.interfaces.BasicService
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.Repository
+import org.springframework.transaction.annotation.Transactional
 
 /**
  * Interface for services that support soft delete operations.
@@ -39,12 +40,12 @@ import org.springframework.data.repository.Repository
  * @param SR The type of the store request.
  * @param UR The type of the update request.
  */
-interface SoftDeletableService<M, PAGE, ID, SR : Request, UR : Request> :
+interface SoftDeletableService<M, PAGE, ID : Any, SR : Request, UR : Request> :
     BasicService<M, PAGE, ID, SR, UR, Unit> where M : SoftDeletableEntity {
 
     val repository: Repository<M, ID>
     var repositorySupport: RepositorySupport
-    
+
     /**
      * Soft deletes an entity by marking it as deleted without removing from database.
      *
@@ -52,6 +53,14 @@ interface SoftDeletableService<M, PAGE, ID, SR : Request, UR : Request> :
      * @return The soft deleted entity.
      * @throws IllegalStateException if entity is already soft deleted.
      */
+    // Transactional boundary lives here, not just on the controller-layer marker's
+    // softDelete: this is a plain inherited interface default (never overridden), and
+    // repositorySupport.persist()/update() on a HibernateRepository-backed repository
+    // has no transactional wrapper of its own (unlike JpaRepository.save()/delete()),
+    // so it needs an already-active transaction on the current thread. Calling another
+    // @Transactional method on `this` from here would be a self-invocation that bypasses
+    // the Spring AOP proxy, so the boundary must be declared at this actual call site.
+    @Transactional
     fun softDelete(id: ID): M {
         val logger = LoggerFactory.getLogger(this::class.java)
         logger.debug("Service soft delete for ID: $id")
@@ -78,6 +87,7 @@ interface SoftDeletableService<M, PAGE, ID, SR : Request, UR : Request> :
      * @return The restored entity.
      * @throws IllegalStateException if entity is not soft deleted.
      */
+    @Transactional
     fun restore(id: ID): M {
         val logger = LoggerFactory.getLogger(this::class.java)
         logger.debug("Service restore for ID: $id")
@@ -102,6 +112,7 @@ interface SoftDeletableService<M, PAGE, ID, SR : Request, UR : Request> :
      *
      * @param id The ID of the entity to force delete.
      */
+    @Transactional
     fun forceDelete(id: ID): Unit {
         val logger = LoggerFactory.getLogger(this::class.java)
         logger.debug("Service force delete for ID: $id")

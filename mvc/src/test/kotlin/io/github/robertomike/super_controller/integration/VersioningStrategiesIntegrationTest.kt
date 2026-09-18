@@ -1,6 +1,6 @@
 package io.github.robertomike.super_controller.integration
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import tools.jackson.databind.ObjectMapper
 import io.github.robertomike.super_controller.BasicTest
 import org.junit.jupiter.api.Test
 import org.springframework.test.context.TestPropertySource

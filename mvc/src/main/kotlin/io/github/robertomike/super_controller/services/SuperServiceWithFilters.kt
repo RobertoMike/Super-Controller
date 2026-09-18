@@ -19,7 +19,7 @@ import org.springframework.data.domain.PageRequest
  * @param M The type of the model being managed by this service.
  * @param ID The type of the ID of the model being managed by this service.
  */
-abstract class SuperServiceWithFilters<M : BaseModel, ID, SR : Request, UR : Request> : SuperService<M, ID, SR, UR>() {
+abstract class SuperServiceWithFilters<M : BaseModel, ID : Any, SR : Request, UR : Request> : SuperService<M, ID, SR, UR>() {
     /**
      * Returns a list of filters to be applied to the service's queries.
      *

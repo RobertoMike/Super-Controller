@@ -145,7 +145,7 @@ class OpenApiIntegrationTest : BasicTest() {
                 .accept(org.springframework.http.MediaType.APPLICATION_JSON)
         )
             .andExpect(MockMvcResultMatchers.status().isOk)
-            .andExpect(MockMvcResultMatchers.jsonPath("$.openapi").value("3.0.1"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.openapi").value("3.1.0"))
     }
 
     @Test

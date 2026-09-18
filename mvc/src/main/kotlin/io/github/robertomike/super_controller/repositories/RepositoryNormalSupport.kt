@@ -13,7 +13,7 @@ class RepositoryNormalSupport : RepositorySupport {
         return repository is CrudRepository && repository is PagingAndSortingRepository<*, *>
     }
 
-    override fun <M, I> findAll(page: PageRequest, repository: Repository<M, I>): Page<M> {
+    override fun <M : Any, I : Any> findAll(page: PageRequest, repository: Repository<M, I>): Page<M> {
         return repository.extendsPagination()
             .findAll(page)
     }
@@ -23,17 +23,17 @@ class RepositoryNormalSupport : RepositorySupport {
      *
      * @param model The model to save.
      */
-    override fun <M, I> persist(model: M, repository: Repository<M, I>) {
+    override fun <M : Any, I : Any> persist(model: M, repository: Repository<M, I>) {
         repository.extendsCrudRepository()
-            .save(model as (M & Any))
+            .save(model)
     }
 
-    override fun <M, I> findById(
+    override fun <M : Any, I : Any> findById(
         id: I,
         repository: Repository<M, I>
     ): Optional<M> {
         return repository.extendsCrudRepository()
-            .findById(id as (I & Any))
+            .findById(id)
     }
 
     /**
@@ -41,9 +41,9 @@ class RepositoryNormalSupport : RepositorySupport {
      *
      * @param model The model to save.
      */
-    override fun <M, I> update(model: M, repository: Repository<M, I>) {
+    override fun <M : Any, I : Any> update(model: M, repository: Repository<M, I>) {
         repository.extendsCrudRepository()
-            .save(model as (M & Any))
+            .save(model)
     }
 
     /**
@@ -51,9 +51,9 @@ class RepositoryNormalSupport : RepositorySupport {
      *
      * @param model The model to save.
      */
-    override fun <M, I> delete(model: M, repository: Repository<M, I>) {
+    override fun <M : Any, I : Any> delete(model: M, repository: Repository<M, I>) {
         repository.extendsCrudRepository()
-            .delete(model as (M & Any))
+            .delete(model)
     }
 
     /**
@@ -61,7 +61,7 @@ class RepositoryNormalSupport : RepositorySupport {
      *
      * @throws SuperControllerException if the repository does not extend from [CrudRepository]
      */
-    private fun <M, I> Repository<M, I>.extendsCrudRepository(): CrudRepository<M, I> {
+    private fun <M : Any, I : Any> Repository<M, I>.extendsCrudRepository(): CrudRepository<M, I> {
         if (this !is CrudRepository<M, I>) {
             throw SuperControllerException(
                 "The repository doesn't extend from CrudRepository"
@@ -77,7 +77,7 @@ class RepositoryNormalSupport : RepositorySupport {
      *
      * @throws SuperControllerException if the repository does not extend from [PagingAndSortingRepository]
      */
-    private fun <M, I> Repository<M, I>.extendsPagination(): PagingAndSortingRepository<M, I> {
+    private fun <M : Any, I : Any> Repository<M, I>.extendsPagination(): PagingAndSortingRepository<M, I> {
         if (this !is PagingAndSortingRepository<M, I>) {
             throw SuperControllerException(
                 "The repository doesn't extend from PagingAndSortingRepository"

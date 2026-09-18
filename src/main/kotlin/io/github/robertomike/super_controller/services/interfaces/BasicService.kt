@@ -13,7 +13,7 @@ import org.springframework.data.domain.PageRequest
  * @param M The type of data being managed by the service.
  * @param ID The type of identifier used to uniquely identify the data.
  */
-interface BasicService<M, PAGE, ID, out SR : Request, out UR : Request, DELETE> : GenericUtil {
+interface BasicService<M : Any, PAGE, ID : Any, out SR : Request, out UR : Request, DELETE> : GenericUtil {
     /**
      * Retrieves a page of data.
      *

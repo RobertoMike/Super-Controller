@@ -51,10 +51,23 @@ class SuperControllerTest : BasicTest() {
     @Test
     fun executePolicy_errors() {
         assertThrows<SuperControllerException> {
-            ReflectionTestUtils.invokeMethod<Boolean>(controller, "executePolicy", STORE, null, null)
+            invokeExecutePolicy(STORE, null, null)
         }
         assertThrows<SuperControllerException> {
-            ReflectionTestUtils.invokeMethod<Boolean>(controller, "executePolicy", SHOW, null, null)
+            invokeExecutePolicy(SHOW, null, null)
         }
+    }
+
+    // Spring 7's ReflectionTestUtils.invokeMethod now declares its vararg as
+    // JSpecify non-null Any, which Kotlin enforces at compile time - but
+    // executePolicy's own model/request parameters are genuinely nullable, and
+    // this test exercises that null path. An Array<Any?> holds nulls fine at
+    // runtime (JVM arrays don't enforce element nullability); the unchecked
+    // cast only relabels the static type so it satisfies the vararg's signature.
+    private fun invokeExecutePolicy(vararg args: Any?): Boolean? {
+        @Suppress("UNCHECKED_CAST")
+        return ReflectionTestUtils.invokeMethod<Boolean>(
+            controller, "executePolicy", *(args as Array<Any>)
+        )
     }
 }

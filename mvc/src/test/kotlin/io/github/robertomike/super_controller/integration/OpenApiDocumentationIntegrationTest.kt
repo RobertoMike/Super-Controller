@@ -1,7 +1,7 @@
 package io.github.robertomike.super_controller.integration
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.ObjectMapper
 import io.github.robertomike.super_controller.BasicTest
 import io.github.robertomike.super_controller.config.router.RouterConfig
 import io.github.robertomike.super_controller.controllers.SuperController
@@ -63,7 +63,7 @@ class OpenApiDocumentationIntegrationTest : BasicTest() {
             "Soft delete description should explain behavior"
         )
         assertEquals("softDeleteUser", softDeleteOperation.path("operationId").asText())
-        val tags = softDeleteOperation.path("tags").map { it.asText() }
+        val tags = softDeleteOperation.path("tags").iterator().asSequence().map { it.asText() }.toList()
         assertTrue(tags.contains("Users"), "Soft delete operation should reuse the Users tag")
     }
 
@@ -106,7 +106,7 @@ class OpenApiDocumentationIntegrationTest : BasicTest() {
             "Restore description should explain it's for soft-deleted records"
         )
         assertEquals("restoreUser", restoreOperation.path("operationId").asText())
-        val tags = restoreOperation.path("tags").map { it.asText() }
+        val tags = restoreOperation.path("tags").iterator().asSequence().map { it.asText() }.toList()
         assertTrue(tags.contains("Users"), "Restore operation should use Users tag")
     }
 
@@ -138,7 +138,7 @@ class OpenApiDocumentationIntegrationTest : BasicTest() {
         val parameters = indexOperation.path("parameters")
         assertTrue(parameters.isArray, "Parameters should be an array")
 
-        val paramNames = parameters.map { it.path("name").asText() }
+        val paramNames = parameters.iterator().asSequence().map { it.path("name").asText() }.toList()
         assertTrue(paramNames.contains("page"), "Should have page parameter")
         assertTrue(paramNames.contains("size"), "Should have size parameter")
         assertTrue(paramNames.contains("sort"), "Should have sort parameter")
@@ -177,7 +177,7 @@ class OpenApiDocumentationIntegrationTest : BasicTest() {
 
         val parameters = showOperation.path("parameters")
         if (parameters.isArray) {
-            val paramNames = parameters.map { it.path("name").asText() }
+            val paramNames = parameters.iterator().asSequence().map { it.path("name").asText() }.toList()
             assertTrue(!paramNames.contains("page"), "Show operation should not have page parameter")
             assertTrue(!paramNames.contains("size"), "Show operation should not have size parameter")
             assertTrue(!paramNames.contains("sort"), "Show operation should not have sort parameter")
@@ -202,12 +202,12 @@ class OpenApiDocumentationIntegrationTest : BasicTest() {
 
         // Check Users tag
         val indexOperation = pathsNode.path("/api/users").get("get")
-        val tags = indexOperation.path("tags").map { it.asText() }
+        val tags = indexOperation.path("tags").iterator().asSequence().map { it.asText() }.toList()
         assertTrue(tags.contains("Users"), "Index operation should have Users tag")
 
         // Check Orders tag
         val ordersOperation = pathsNode.path("/api/orders").get("get")
-        val ordersTags = ordersOperation.path("tags").map { it.asText() }
+        val ordersTags = ordersOperation.path("tags").iterator().asSequence().map { it.asText() }.toList()
         assertTrue(ordersTags.contains("Orders"), "Orders index operation should have Orders tag")
     }
 
@@ -261,5 +261,5 @@ class OpenApiDocumentationIntegrationTest : BasicTest() {
     }
 
     private fun availablePaths(pathsNode: JsonNode): List<String> =
-        pathsNode.fieldNames().asSequence().toList()
+        pathsNode.propertyNames().toList()
 }

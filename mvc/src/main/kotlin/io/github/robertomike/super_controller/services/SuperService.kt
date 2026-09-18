@@ -2,6 +2,7 @@ package io.github.robertomike.super_controller.services
 
 import io.github.robertomike.super_controller.exceptions.NotFoundException
 import io.github.robertomike.super_controller.exceptions.SuperControllerException
+import io.github.robertomike.super_controller.models.SoftDeletableEntity
 import io.github.robertomike.super_controller.repositories.RepositorySupport
 import io.github.robertomike.super_controller.requests.Request
 import io.github.robertomike.super_controller.services.interfaces.AfterAndBeforeActions
@@ -11,7 +12,10 @@ import io.github.robertomike.super_controller.utils.ClassUtils
 import jakarta.annotation.PostConstruct
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.jpa.domain.Specification
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.repository.Repository
 import org.springframework.transaction.annotation.Transactional
 
@@ -21,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional
  * @param M The type of the model being managed by this service.
  * @param ID The type of the ID of the model being managed by this service.
  */
-abstract class SuperService<M, ID, SR : Request, UR : Request> : ClassUtils,
+abstract class SuperService<M : Any, ID : Any, SR : Request, UR : Request> : ClassUtils,
     AfterAndBeforeActions<M, Page<M>, SR, UR, Unit>, BasicService<M, Page<M>, ID, SR, UR, Unit>,
     MappingActions<M, SR, UR> {
 
@@ -49,7 +53,32 @@ abstract class SuperService<M, ID, SR : Request, UR : Request> : ClassUtils,
      * @return A page of models.
      */
     override fun index(page: PageRequest, params: Map<String, String>): Page<M> {
-        val models = repositorySupport.findAll(page, repository)
+        val models = if (SoftDeletableEntity::class.java.isAssignableFrom(model)) {
+            if (repository is JpaSpecificationExecutor<*>) {
+                // DB-level predicate: pagination counts (totalElements/totalPages) stay
+                // exact, since the filter runs before LIMIT/OFFSET is applied.
+                @Suppress("UNCHECKED_CAST")
+                (repository as JpaSpecificationExecutor<M>).findAll(
+                    Specification { root, _, cb -> cb.isNull(root.get<Any>("deletedAt")) },
+                    page
+                )
+            } else {
+                // No Specification support on this repository: a soft-deleted row must
+                // still never leak into the list response - show/update/destroy already
+                // guarantee that - so filter what was fetched. Doing that post-fetch means
+                // totalElements/totalPages reflect the *unfiltered* query and can overcount
+                // when deleted rows fall on this page; implement JpaSpecificationExecutor<M>
+                // on the repository for exact counts.
+                val fetched = repositorySupport.findAll(page, repository)
+                PageImpl(
+                    fetched.content.filterNot { it is SoftDeletableEntity && it.isDeleted() },
+                    fetched.pageable,
+                    fetched.totalElements
+                )
+            }
+        } else {
+            repositorySupport.findAll(page, repository)
+        }
 
         afterIndex(models)
 
