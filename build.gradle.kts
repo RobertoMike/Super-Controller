@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "io.github.robertomike"
-version = "1.0.7"
+version = "2.0.0"
 
 val baseArtifactId = "super-controller"
 val jdkCompileVersion = 17
